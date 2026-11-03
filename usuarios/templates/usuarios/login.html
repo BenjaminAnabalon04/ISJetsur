@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ingresar - Mi Proyecto{% endblock %}
+
+{% block body_class %}login-page{% endblock %}
+
+{% block content %}
+<section class="login-card">
+
+    <!-- Espacio para el logo (arriba del formulario) -->
+    <div class="login-logo">
+        <img src="{% static 'images/logocolor.png' %}" alt="Logo"> 
+        
+    </div>
+
+    <p class="login-subtitle">Por favor ingresa tus datos</p>
+    <h1 class="login-title">Bienvenido de nuevo</h1>
+
+    {# Error enviado desde la vista: return render(request, 'login.html', {'error': '...'}) #}
+    {% if error %}
+        <div class="alert alert-error login-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div class="form-group">
+            <label for="correo" class="sr-only">Correo electrónico</label>
+            <input
+                type="email"
+                id="correo"
+                name="correo"
+                class="form-control"
+                placeholder="Correo electrónico"
+                value="{{ correo|default:'' }}"
+                autocomplete="email"
+                required
+                autofocus
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="password" class="sr-only">Contraseña</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control"
+                placeholder="Contraseña"
+                autocomplete="current-password"
+                required
+            >
+        </div>
+
+        <div class="login-forgot">
+            {# Cambia "#" por {% url 'nombre_de_tu_url' %} cuando exista la vista #}
+            <a href="#">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Ingresar</button>
+    </form>
+
+</section>
+{% endblock %}

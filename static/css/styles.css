@@ -1,0 +1,299 @@
+/* =========================================================
+   styles.css  ->  static/css/styles.css
+   Estilos base (header, footer, layout). Las demás páginas
+   heredan de base.html.
+   ========================================================= */
+
+/* ---------- Variables ---------- */
+:root {
+    --color-primary: #0f2a7a;      /* azul oscuro (botones, activos) */
+    --color-primary-dark: #0b1f5c;
+    --color-bg-soft: #f5f6f8;      /* fondo gris claro del login */
+    --color-link: #0f2a7a;
+    --color-text: #555555;
+    --color-text-light: #8a8a8a;
+    --color-border: #e5e5e5;
+    --color-bg: #ffffff;
+    --color-top-line: #333333;
+    --header-height: 88px;         /* ALTO DEL HEADER: sube este valor si agrandas mucho el logo */
+    --color-header-bg: var(--color-primary);   /* COLOR DEL HEADER (azul) */
+    --font-main: 'Open Sans', Arial, Helvetica, sans-serif;
+}
+
+/* ---------- Reset básico ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-main);
+    font-size: 15px;
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.5;
+}
+
+a {
+    color: var(--color-link);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Contenedor ---------- */
+.container {
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+.site-header {
+    background: var(--color-header-bg);
+    border-top: 3px solid var(--color-primary-dark);
+    height: var(--header-height);
+}
+
+.header-inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Marca / logo */
+.brand {
+    display: inline-flex;
+    align-items: center;
+}
+
+.brand:hover {
+    text-decoration: none;
+}
+
+.brand-logo {
+    height: 64px;            /* <-- TAMAÑO DEL LOGO DEL HEADER: cambia este valor (antes 48px) */
+    width: auto;
+    display: block;
+}
+
+.brand-text {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ffffff;          /* texto de relleno en blanco para que se vea sobre el azul */
+    letter-spacing: -0.5px;
+}
+
+.brand-text span {
+    color: #ff8a80;
+}
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+.site-main {
+    flex: 1;                 /* empuja el footer hacia abajo */
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 28px 15px;
+}
+
+/* Mensajes de Django */
+.messages {
+    max-width: 425px;
+    margin: 0 auto 16px;
+}
+
+.alert {
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    border: 1px solid transparent;
+}
+
+.alert-success { background: #e6f4ea; color: #1e6b34; border-color: #b7e0c2; }
+.alert-error,
+.alert-danger  { background: #fdecea; color: #a12622; border-color: #f5c2be; }
+.alert-warning { background: #fff8e1; color: #8a6d00; border-color: #ffe08a; }
+.alert-info    { background: #e8f0fe; color: #1a4aa8; border-color: #b9cdf7; }
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+.site-footer {
+    padding: 20px 0 32px;
+    text-align: center;
+}
+
+.footer-terms {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+.login-page {
+    background: var(--color-bg-soft);
+}
+
+.login-page .site-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 560px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 44px 44px 48px;
+    margin-top: 12px;
+}
+
+/* Espacio del logo (arriba del formulario) */
+.login-logo {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.login-logo img {
+    max-height: 120px;       /* <-- TAMAÑO DEL LOGO DEL LOGIN: cambia este valor (antes 64px) */
+    width: auto;
+}
+
+.login-logo-text {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: -0.5px;
+}
+
+.login-logo-text span {
+    color: #e53935;
+}
+
+.login-subtitle {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--color-text-light);
+}
+
+.login-title {
+    margin: 0 0 32px;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #262a35;
+}
+
+/* Formulario */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    border: 1px solid #d9dce3;
+    border-radius: 6px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    color: #333333;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control::placeholder {
+    color: #9aa0ab;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(15, 42, 122, 0.15);
+}
+
+.login-forgot {
+    text-align: right;
+    margin: -6px 0 28px;
+    font-size: 14px;
+}
+
+.btn-primary {
+    display: block;
+    width: 100%;
+    height: 52px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+}
+
+.login-error {
+    margin: 0 0 20px;
+}
+
+/* Solo para lectores de pantalla (labels ocultos) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 576px) {
+    .brand-text {
+        font-size: 22px;
+    }
+
+    .site-main {
+        padding: 20px 15px;
+    }
+
+    .login-card {
+        padding: 32px 22px 36px;
+    }
+
+    .login-title {
+        font-size: 26px;
+    }
+}
