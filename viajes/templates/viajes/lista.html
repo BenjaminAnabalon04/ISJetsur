@@ -1,0 +1,128 @@
+{% extends 'base_app.html' %}
+
+{% block title %}JetSur · Viajes{% endblock %}
+{% block page_title %}Viajes{% endblock %}
+{% block page_subtitle %}Buscar salidas y asientos disponibles{% endblock %}
+{% block page_actions %}
+<a href="{% url 'usuarios:dashboard' %}" class="btn-ghost">← Volver al panel</a>
+{% endblock %}
+
+{% block app_content %}
+<form method="get" class="search-bar">
+    <div class="search-field">
+        <label for="origen">Origen</label>
+        <input
+            type="text"
+            id="origen"
+            name="origen"
+            class="form-control"
+            placeholder="Ej: Santiago"
+            value="{{ request.GET.origen|default:'' }}"
+        >
+    </div>
+
+    <div class="search-field">
+        <label for="destino">Destino</label>
+        <input
+            type="text"
+            id="destino"
+            name="destino"
+            class="form-control"
+            placeholder="Ej: Valparaíso"
+            value="{{ request.GET.destino|default:'' }}"
+        >
+    </div>
+
+    <div class="search-field">
+        <label for="fecha">Fecha</label>
+        <input
+            type="date"
+            id="fecha"
+            name="fecha"
+            class="form-control"
+            value="{{ request.GET.fecha|default:'' }}"
+        >
+    </div>
+
+    <div class="search-actions">
+        <button type="submit" class="btn-solid">Buscar</button>
+        <a href="{% url 'viajes:lista' %}" class="btn-ghost">Limpiar</a>
+    </div>
+</form>
+<div class="viajes-layout">
+
+    <aside class="card filters">
+        <div class="card-header">
+            <h2>Filtros</h2>
+        </div>
+        <div class="filters-body">
+
+            <h3 class="filter-title">Horario</h3>
+            <label class="check">
+                <input type="checkbox" name="horario" value="manana">
+                <span>Mañana (antes de 12:00)</span>
+            </label>
+            <label class="check">
+                <input type="checkbox" name="horario" value="tarde">
+                <span>Tarde (12:00 – 18:00)</span>
+            </label>
+            <label class="check">
+                <input type="checkbox" name="horario" value="noche">
+                <span>Noche (después de 18:00)</span>
+            </label>
+
+            <h3 class="filter-title">Estado</h3>
+            <label class="check">
+                <input type="checkbox" name="estado" value="programado">
+                <span>Programado</span>
+            </label>
+            <label class="check">
+                <input type="checkbox" name="estado" value="en_curso">
+                <span>En curso</span>
+            </label>
+            <label class="check">
+                <input type="checkbox" name="estado" value="cancelado">
+                <span>Cancelado</span>
+            </label>
+
+        </div>
+    </aside>
+
+    <section class="viajes-results">
+
+        {% for v in viajes %}
+        <article class="card viaje-card">
+            <div class="viaje-main">
+                <div class="viaje-hora">{{ v.salida|time:"H:i" }}</div>
+
+                <div class="viaje-info">
+                    <span class="viaje-ruta">{{ v.origen }} → {{ v.destino }}</span>
+                    <span class="viaje-meta">Salida programada</span>
+                </div>
+
+                <div class="viaje-tarifa">
+                    <span class="viaje-label">Tarifa</span>
+                    <span class="viaje-valor">$ {{ v.tarifa }}</span>
+                </div>
+
+                <div class="viaje-cupos">
+                    <span class="viaje-label">Cupos</span>
+                    <span class="viaje-valor">{{ v.cupos }} / 30</span>
+                </div>
+
+                <a href="#" class="btn-sm">Ver asientos</a>
+            </div>
+        </article>
+        {% empty %}
+        <div class="card empty-state">
+            <span class="empty-icon"></span>
+            <p class="empty-title">No hay viajes para mostrar</p>
+            <p class="empty-text">Ajusta los criterios de búsqueda o registra nuevas salidas.</p>
+        </div>
+        {% endfor %}
+
+    </section>
+
+</div>
+
+{% endblock %}

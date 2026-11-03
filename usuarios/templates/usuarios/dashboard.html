@@ -1,0 +1,157 @@
+{% extends 'base_app.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}{{ request.session.rol|default:"Usuario" }} · Sucursal JetSur{% endblock %}
+
+{% block page_actions %}
+<div class="btn-row">
+    <a href="{% url 'viajes:lista' %}" class="btn-ghost">Buscar viaje</a>
+    <button type="button" class="btn-solid">+ Nueva venta</button>
+</div>
+{% endblock %}
+
+{% block app_content %}
+
+{# ─────────── KPIs (solo Administrador) ─────────── #}
+{% if request.session.rol == 'Administrador' %}
+<section class="kpi-grid">
+    <article class="kpi-card">
+        <span class="kpi-label">Vendido hoy</span>
+        <span class="kpi-value">$ {{ vendido_hoy|default:"0" }}</span>
+        <span class="kpi-hint">{{ ventas_hoy|default:"0" }} ventas</span>
+    </article>
+    <article class="kpi-card">
+        <span class="kpi-label">Devuelto hoy</span>
+        <span class="kpi-value kpi-danger">$ {{ devuelto_hoy|default:"0" }}</span>
+        <span class="kpi-hint">{{ devoluciones_hoy|default:"0" }} devoluciones</span>
+    </article>
+    <article class="kpi-card kpi-highlight">
+        <span class="kpi-label">Recaudación neta</span>
+        <span class="kpi-value">$ {{ neto_hoy|default:"0" }}</span>
+        <span class="kpi-hint">Ventas − devoluciones</span>
+    </article>
+    <article class="kpi-card">
+        <span class="kpi-label">Reservas pendientes</span>
+        <span class="kpi-value">{{ pendientes|default:"0" }}</span>
+        <span class="kpi-hint">Por cobrar</span>
+    </article>
+</section>
+{% endif %}
+
+{# ─────────── Próximas salidas ─────────── #}
+<section class="card">
+    <div class="card-header">
+        <h2>Próximas salidas</h2>
+        <a href="{% url 'viajes:lista' %}" class="card-link">Ver todas →</a>
+    </div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Ruta</th>
+                    <th class="num">Tarifa</th>
+                    <th class="num">Cupos</th>
+                    <th>Estado</th>
+                    <th class="col-action">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in proximos_viajes %}
+                <tr>
+                    <td class="strong">{{ v.salida|time:"H:i" }}</td>
+                    <td>{{ v.origen }} → {{ v.destino }}</td>
+                    <td class="num">$ {{ v.tarifa }}</td>
+                    <td class="num">{{ v.cupos }}</td>
+                    <td><span class="badge-ok">{{ v.estado }}</span></td>
+                    <td class="col-action">
+                        <a href="#" class="btn-sm">Ver asientos</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="table-empty">Sin salidas programadas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{# ─────────── Reservas pendientes ─────────── #}
+<section class="card">
+    <div class="card-header">
+        <h2>Reservas pendientes</h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="num">Asiento</th>
+                    <th>Pasajero</th>
+                    <th>Viaje</th>
+                    <th>Estado</th>
+                    <th class="col-action">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reservas %}
+                <tr>
+                    <td class="num strong">{{ r.numero_asiento }}</td>
+                    <td>{{ r.usuario }}</td>
+                    <td>{{ r.viaje }}</td>
+                    <td><span class="badge-warn">Pendiente</span></td>
+                    <td class="col-action">
+                        <button type="button" class="btn-sm">Cobrar</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="table-empty">Sin reservas pendientes.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{# ─────────── Últimos tickets ─────────── #}
+<section class="card">
+    <div class="card-header">
+        <h2>Últimos tickets emitidos</h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th class="num">Asiento</th>
+                    <th>Ruta</th>
+                    <th class="num">Monto</th>
+                    <th>Hora</th>
+                    <th class="col-action">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tickets %}
+                <tr>
+                    <td class="mono">{{ t.codigo }}</td>
+                    <td class="num">{{ t.asiento }}</td>
+                    <td>{{ t.ruta }}</td>
+                    <td class="num">$ {{ t.monto }}</td>
+                    <td>{{ t.fecha|time:"H:i" }}</td>
+                    <td class="col-action">
+                        <button type="button" class="btn-sm btn-sm-ghost">Reimprimir</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="table-empty">Aún no se han emitido tickets.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}
