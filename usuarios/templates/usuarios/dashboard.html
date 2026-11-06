@@ -12,22 +12,21 @@
 
 {% block app_content %}
 
-{# ─────────── KPIs (solo Administrador) ─────────── #}
 {% if request.session.rol == 'Administrador' %}
 <section class="kpi-grid">
     <article class="kpi-card">
         <span class="kpi-label">Vendido hoy</span>
-        <span class="kpi-value">$ {{ vendido_hoy|default:"0" }}</span>
+        <span class="kpi-value">$ {{ vendido_hoy|floatformat:0 }}</span>
         <span class="kpi-hint">{{ ventas_hoy|default:"0" }} ventas</span>
     </article>
     <article class="kpi-card">
         <span class="kpi-label">Devuelto hoy</span>
-        <span class="kpi-value kpi-danger">$ {{ devuelto_hoy|default:"0" }}</span>
+        <span class="kpi-value kpi-danger">$ {{ devuelto_hoy|floatformat:0 }}</span>
         <span class="kpi-hint">{{ devoluciones_hoy|default:"0" }} devoluciones</span>
     </article>
     <article class="kpi-card kpi-highlight">
         <span class="kpi-label">Recaudación neta</span>
-        <span class="kpi-value">$ {{ neto_hoy|default:"0" }}</span>
+        <span class="kpi-value">$ {{ neto_hoy|floatformat:0 }}</span>
         <span class="kpi-hint">Ventas − devoluciones</span>
     </article>
     <article class="kpi-card">
@@ -38,7 +37,6 @@
 </section>
 {% endif %}
 
-{# ─────────── Próximas salidas ─────────── #}
 <section class="card">
     <div class="card-header">
         <h2>Próximas salidas</h2>
@@ -52,7 +50,6 @@
                     <th>Ruta</th>
                     <th class="num">Tarifa</th>
                     <th class="num">Cupos</th>
-                    <th>Estado</th>
                     <th class="col-action">Acción</th>
                 </tr>
             </thead>
@@ -61,24 +58,21 @@
                 <tr>
                     <td class="strong">{{ v.salida|time:"H:i" }}</td>
                     <td>{{ v.origen }} → {{ v.destino }}</td>
-                    <td class="num">$ {{ v.tarifa }}</td>
+                    <td class="num">$ {{ v.tarifa|floatformat:0 }}</td>
                     <td class="num">{{ v.cupos }}</td>
-                    <td><span class="badge-ok">{{ v.estado }}</span></td>
                     <td class="col-action">
-                        <a href="#" class="btn-sm">Ver asientos</a>
+                        <a href="{% url 'viajes:asientos' v.id_viaje %}" class="btn-sm">Ver asientos</a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="table-empty">Sin salidas programadas.</td>
+                    <td colspan="5" class="table-empty">Sin salidas programadas.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </section>
-
-{# ─────────── Reservas pendientes ─────────── #}
 <section class="card">
     <div class="card-header">
         <h2>Reservas pendientes</h2>
@@ -98,11 +92,13 @@
                 {% for r in reservas %}
                 <tr>
                     <td class="num strong">{{ r.numero_asiento }}</td>
-                    <td>{{ r.usuario }}</td>
-                    <td>{{ r.viaje }}</td>
+                    
+                    <td>{{ r.nombre_pasajero|default:"—" }}</td>
+                    <td>{{ r.id_viaje.origen }} → {{ r.id_viaje.destino }}
+                        · {{ r.id_viaje.salida|date:"d/m H:i" }}</td>
                     <td><span class="badge-warn">Pendiente</span></td>
                     <td class="col-action">
-                        <button type="button" class="btn-sm">Cobrar</button>
+                        <a href="{% url 'viajes:cobrar' r.id_reserva %}" class="btn-sm">Cobrar</a>
                     </td>
                 </tr>
                 {% empty %}
@@ -114,8 +110,6 @@
         </table>
     </div>
 </section>
-
-{# ─────────── Últimos tickets ─────────── #}
 <section class="card">
     <div class="card-header">
         <h2>Últimos tickets emitidos</h2>
@@ -141,7 +135,9 @@
                     <td class="num">$ {{ t.monto }}</td>
                     <td>{{ t.fecha|time:"H:i" }}</td>
                     <td class="col-action">
-                        <button type="button" class="btn-sm btn-sm-ghost">Reimprimir</button>
+                        <a href="{% url 'viajes:ticket' t.codigo %}"
+                            class="btn-sm btn-sm-ghost"
+                            target="_blank" rel="noopener">Reimprimir</a>
                     </td>
                 </tr>
                 {% empty %}

@@ -1,0 +1,50 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Cobro · Reserva #{{ reserva.id_reserva }}{% endblock %}
+{% block page_title %}Cobrar reserva #{{ reserva.id_reserva }}{% endblock %}
+{% block page_subtitle %}Confirma el pago para emitir el ticket{% endblock %}
+{% block page_actions %}
+<a href="{% url 'viajes:lista' %}" class="btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block app_content %}
+
+<div class="card cobro-card">
+    <table class="table">
+        <tbody>
+            <tr><th>Pasajero</th><td>{{ reserva.nombre_pasajero }}</td></tr>
+            <tr><th>Teléfono</th><td>{{ reserva.telefono }}</td></tr>
+            <tr><th>Ruta</th><td>{{ viaje.origen }} → {{ viaje.destino }}</td></tr>
+            <tr><th>Salida</th><td>{{ viaje.salida|date:"d/m/Y H:i" }}</td></tr>
+            <tr><th>Asiento</th><td>{{ reserva.numero_asiento }}</td></tr>
+            <tr><th>Tarifa</th><td class="strong">$ {{ viaje.tarifa|floatformat:0 }}</td></tr>
+        </tbody>
+    </table>
+<div class="alert alert-warning">
+    Esta reserva está <strong>pendiente de pago</strong>: el asiento está retenido.
+    Si no se cobra, cancélala para liberarlo.
+</div>
+    <form method="post">
+        {% csrf_token %}
+
+        <fieldset class="medios">
+            <legend>Medio de pago</legend>
+            <label class="check">
+                <input type="radio" name="medio" value="efectivo" checked>
+                <span>Efectivo</span>
+            </label>
+            <label class="check">
+                <input type="radio" name="medio" value="tarjeta">
+                <span>Tarjeta</span>
+            </label>
+        </fieldset>
+
+        <button type="submit" class="btn-solid">Confirmar pago y emitir ticket</button>
+    </form>
+</div>
+<form method="post" action="{% url 'viajes:cancelar' reserva.id_reserva %}"
+      onsubmit="return confirm('¿Cancelar la reserva y liberar el asiento?');">
+    {% csrf_token %}
+    <button type="submit" class="btn-danger">Cancelar reserva</button>
+</form>
+{% endblock %}

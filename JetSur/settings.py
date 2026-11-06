@@ -78,12 +78,12 @@ WSGI_APPLICATION = 'JetSur.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'brp5mmonub9sykdl930a',  # Nombre de la BD
-    	'USER': 'u0g17q50otro4lgm',  # Usuario de MySQL
-    	'PASSWORD': 'QuGRJ6mRVH8Lskrw1nqZ',  # Cambia por tu contraseña
-    	'HOST': 'brp5mmonub9sykdl930a-mysql.services.clever-cloud.com',  # Servidor de BD
-   	    'PORT': '3306',  # Puerto de MySQL (por defecto)
-        'CONN_MAX_AGE': 60,                          # ← reutiliza la conexión 60 s
+        'NAME': 'brp5mmonub9sykdl930a', 
+    	'USER': 'u0g17q50otro4lgm',  
+    	'PASSWORD': 'QuGRJ6mRVH8Lskrw1nqZ',  
+    	'HOST': 'brp5mmonub9sykdl930a-mysql.services.clever-cloud.com',  
+   	    'PORT': '3306',  
+        'CONN_MAX_AGE': 60,                        
         'OPTIONS': {'connect_timeout': 10},
 	}
 
@@ -118,7 +118,7 @@ TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

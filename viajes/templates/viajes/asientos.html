@@ -1,0 +1,103 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Asientos · {{ viaje.origen }} → {{ viaje.destino }}{% endblock %}
+{% block page_title %}Elige un asiento{% endblock %}
+{% block page_subtitle %}{{ viaje.salida|date:"l d/m/Y H:i" }} · {{ viaje.origen }} → {{ viaje.destino }}{% endblock %}
+{% block page_actions %}
+<a href="{% url 'viajes:lista' %}" class="btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block app_content %}
+
+<div class="card resumen-viaje">
+    <div>
+        <strong>{{ viaje.origen }} → {{ viaje.destino }}</strong>
+        <div class="viaje-meta">{{ viaje.salida|date:"l d/m/Y H:i" }}</div>
+    </div>
+    <div class="viaje-tarifa">
+        <span class="viaje-label">Tarifa</span>
+        <span class="viaje-valor">$ {{ viaje.tarifa|floatformat:0 }}</span>
+    </div>
+</div>
+
+{% if not vendible %}
+    <div class="alert alert-warning">
+        Este viaje ya no se puede vender: ya salió o no está programado.
+    </div>
+{% endif %}
+
+<form method="post" action="{% url 'viajes:reservar' viaje.id_viaje %}" class="reserva-layout">
+    {% csrf_token %}
+
+    <section class="card mapa-card">
+        <h2 class="mapa-titulo">{{ viaje.salida|date:"H:i" }} · {{ viaje.origen }} → {{ viaje.destino }}</h2>
+
+        <fieldset class="mapa-fieldset" {% if not vendible %}disabled{% endif %}>
+            <div class="bus">
+                <div class="bus-frente">Frente del bus</div>
+                {% for fila in filas %}
+                <div class="bus-fila">
+                    {% for n in fila %}
+                        {% if forloop.counter == 3 %}<span class="pasillo"></span>{% endif %}
+                        <label class="asiento {% if n in ocupados %}asiento-ocupado{% else %}asiento-libre{% endif %}">
+                            <input type="radio" name="numero_asiento" value="{{ n }}"
+                                   {% if n in ocupados %}disabled{% endif %} required>
+                            <span>{{ n }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <div class="leyenda">
+            <span><i class="cuadro cuadro-libre"></i> Libre</span>
+            <span><i class="cuadro cuadro-ocupado"></i> Ocupado</span>
+            <span><i class="cuadro cuadro-seleccionado"></i> Seleccionado</span>
+        </div>
+    </section>
+
+    <aside class="card datos-card">
+        <div class="resumen-linea">
+            <span class="viaje-label">Tarifa</span>
+            <span class="viaje-valor grande">$ {{ viaje.tarifa|floatformat:0 }}</span>
+        </div>
+        <div class="resumen-linea">
+            <span class="viaje-label">Salida</span>
+            <span>{{ viaje.salida|date:"l d/m/Y H:i" }}</span>
+        </div>
+
+        <hr class="sep-suave">
+
+        {% if vendible %}
+        <div class="form-group">
+            <label for="nombre_pasajero">Nombre del pasajero</label>
+            <input type="text" id="nombre_pasajero" name="nombre_pasajero"
+                   class="form-control" maxlength="120" required>
+        </div>
+
+        <div class="form-group">
+            <label for="rut_pasajero">RUT</label>
+            <input type="text" id="rut_pasajero" name="rut_pasajero"
+                   class="form-control" maxlength="12"
+                   placeholder="12.345.678-5" required>
+        </div>
+
+        <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input type="tel" id="telefono" name="telefono"
+                   class="form-control" maxlength="30"
+                   placeholder="+56912345678" required>
+        </div>
+
+        <button type="submit" class="btn-solid ancho">Reservar asiento</button>
+        <a href="{% url 'viajes:lista' %}" class="btn-ghost ancho">← Volver</a>
+        {% else %}
+        <div class="alert alert-warning">
+            Este viaje ya no se puede vender: ya salió o no está programado.
+        </div>
+        {% endif %}
+    </aside>
+</form>
+
+{% endblock %}
