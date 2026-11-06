@@ -1,0 +1,85 @@
+{% extends 'base_app.html' %}
+
+{% block title %}JetSur · Viajes{% endblock %}
+{% block page_title %}Próximos viajes{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'usuarios:dashboard' %}" class="btn-ghost">← Volver al panel</a>
+{% endblock %}
+
+{% block app_content %}
+
+<form method="get" class="search-bar">
+
+    <div class="search-field">
+        <label for="origen">Origen</label>
+        <div class="combo" data-combo data-fuente="datos-origenes">
+            <input type="text" id="origen" name="origen" class="form-control"
+                   value="{{ origen }}" placeholder="Santiago"
+                   autocomplete="off" role="combobox" aria-autocomplete="list"
+                   aria-expanded="false">
+            <div class="combo-lista" hidden></div>
+        </div>
+    </div>
+
+    <div class="search-field">
+        <label for="destino">Destino</label>
+        <div class="combo" data-combo data-fuente="datos-destinos">
+            <input type="text" id="destino" name="destino" class="form-control"
+                   value="{{ destino }}" placeholder="Chillán"
+                   autocomplete="off" role="combobox" aria-autocomplete="list"
+                   aria-expanded="false">
+            <div class="combo-lista" hidden></div>
+        </div>
+    </div>
+
+    <div class="search-field">
+        <label for="fecha">Fecha</label>
+        <input type="date" id="fecha" name="fecha" class="form-control"
+               value="{{ fecha }}">
+    </div>
+
+    <div class="search-actions">
+        <button type="submit" class="btn-solid">Buscar</button>
+        <a href="{% url 'viajes:lista' %}" class="btn-ghost">Limpiar</a>
+    </div>
+
+</form>
+
+{{ origenes|json_script:"datos-origenes" }}
+{{ destinos|json_script:"datos-destinos" }}
+
+<div class="viajes-results">
+    {% for v in viajes %}
+    <article class="card viaje-card">
+        <div class="viaje-main">
+            <div class="viaje-hora">{{ v.salida|date:"H:i" }}</div>
+            <div class="viaje-info">
+                <span class="viaje-ruta">{{ v.origen }} → {{ v.destino }}</span>
+                <span class="viaje-meta">{{ v.salida|date:"l d/m/Y" }}</span>
+            </div>
+            <div class="viaje-tarifa">
+                <span class="viaje-label">Tarifa</span>
+                <span class="viaje-valor">$ {{ v.tarifa|floatformat:0 }}</span>
+            </div>
+            <div class="viaje-cupos">
+                <span class="viaje-label">Cupos</span>
+                <span class="viaje-valor">{{ v.cupos }} / 30</span>
+            </div>
+            {% if v.cupos > 0 %}
+                <a href="{% url 'viajes:asientos' v.id_viaje %}" class="btn-sm">Ver asientos</a>
+            {% else %}
+                <span class="badge-warn">Agotado</span>
+            {% endif %}
+        </div>
+    </article>
+    {% empty %}
+    <div class="card empty-state">
+        <p class="empty-title">No hay viajes para mostrar</p>
+        <p class="empty-text">Prueba con otra fecha o cambia el origen y destino.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+

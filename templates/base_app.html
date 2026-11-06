@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}JetSur · Panel{% endblock %}
+
+{% block body_class %}app-page{% endblock %}
+
+{% block app_nav %}
+<div class="app-navbar">
+    <div class="app-navbar-inner">
+
+        <nav class="topnav">
+            <a href="{% url 'usuarios:dashboard' %}" class="nav-link {% if activo == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="#" class="nav-link">Ventas</a>
+            <a href="{% url 'viajes:lista' %}" class="nav-link {% if activo == 'viajes' %}active{% endif %}">Viajes</a>
+            <a href="#" class="nav-link">Devoluciones</a>
+            {% if request.session.rol == 'Administrador' %}
+                <a href="#" class="nav-link">Reportes</a>
+                <a href="#" class="nav-link">Usuarios</a>
+            {% endif %}
+        </nav>
+
+        <span class="user-chip">
+            <span class="user-avatar">{{ request.session.nombre|first|default:"U" }}</span>
+            <span class="user-name">{{ request.session.nombre|default:"Usuario" }}</span>
+            <span class="badge-rol">{{ request.session.rol|default:"Cajero" }}</span>
+        </span>
+
+        <a href="{% url 'usuarios:logout' %}" class="nav-logout">Salir</a>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+    <div class="page-head">
+        <div>
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            <p class="page-subtitle">{% block page_subtitle %}Sucursal JetSur{% endblock %}</p>
+        </div>
+        <div class="page-head-actions">{% block page_actions %}{% endblock %}</div>
+    </div>
+
+    {% block app_content %}{% endblock %}
+
+</div>
+{% endblock %}

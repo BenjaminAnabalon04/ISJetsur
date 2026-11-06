@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket {{ ticket.codigo }}</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        @page { size: 80mm auto; margin: 0; }
+
+        body {
+            margin: 0;
+            background: #eceff3;
+            color: #000;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .ticket {
+            width: 72mm;
+            margin: 18px auto;
+            padding: 5mm 3mm;
+            background: #fff;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .logo { display: block; width: 44mm; margin: 0 auto 2mm; }
+
+        .sep { border: 0; border-top: 1px dashed #000; margin: 2mm 0; }
+        .sep-solid { border: 0; border-top: 1px solid #000; margin: 2mm 0; }
+
+        .fila { display: flex; justify-content: space-between; gap: 6px; }
+        .fila .k { text-transform: uppercase; }
+        .fila .v { font-weight: bold; text-align: right; }
+
+        .caja {
+            margin: 2mm 0;
+            padding: 1.5mm 2mm;
+            border: 1px solid #000;
+        }
+
+        .grande { font-size: 15px; }
+        .chico { font-size: 8.5px; line-height: 1.35; text-align: justify; }
+        .centro { text-align: center; }
+
+        .acciones {
+            width: 72mm;
+            margin: 0 auto 24px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .acciones button,
+        .acciones a {
+            display: inline-block;
+            margin: 4px;
+            padding: 8px 14px;
+            border: 1px solid #0f2a7a;
+            border-radius: 6px;
+            background: #0f2a7a;
+            color: #fff;
+            font-size: 13px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .acciones a { background: #fff; color: #0f2a7a; }
+
+        @media print {
+            body { background: #fff; }
+            .ticket { width: 72mm; margin: 0; padding: 3mm; }
+            .acciones { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ticket">
+
+        <img src="{% static 'images/logocolor.png' %}" alt="JetSur" class="logo">
+        <div class="centro chico">BOLETO DE VIAJE</div>
+
+        <hr class="sep">
+
+        <div class="fila"><span class="k">Servicio</span><span class="v">Clásico</span></div>
+        <div class="fila"><span class="k">Tipo</span><span class="v">Particular</span></div>
+
+        <hr class="sep">
+
+        <div class="fila"><span class="k">Origen</span><span class="v">{{ viaje.origen }}</span></div>
+        <div class="fila"><span class="k">Destino</span><span class="v">{{ viaje.destino }}</span></div>
+
+        <hr class="sep">
+
+        <div class="fila"><span class="k">Fecha viaje</span><span class="v">{{ viaje.salida|date:"d/m/Y" }}</span></div>
+        <div class="fila"><span class="k">Hora</span><span class="v">{{ viaje.salida|date:"H:i" }}</span></div>
+        <div class="fila"><span class="k">Asiento</span><span class="v">{{ reserva.numero_asiento }}</span></div>
+
+        <hr class="sep">
+
+        <div class="fila"><span class="k">Pasajero</span><span class="v">{{ reserva.nombre_pasajero|default:"—" }}</span></div>
+        <div class="fila"><span class="k">RUT</span><span class="v">{{ reserva.rut_pasajero|default:"—" }}</span></div>
+        <div class="fila"><span class="k">Teléfono</span><span class="v">{{ reserva.telefono|default:"—" }}</span></div>
+
+        <hr class="sep-solid">
+
+        {% if venta %}
+        <div class="fila"><span class="k">Tarifa</span><span class="v">$ {{ venta.monto|floatformat:0 }}</span></div>
+        <div class="fila grande"><span class="k">Valor pago</span><span class="v">$ {{ venta.monto|floatformat:0 }}</span></div>
+        <div class="fila"><span class="k">Medio</span><span class="v">{{ venta.medio|capfirst }}</span></div>
+        {% endif %}
+
+        <hr class="sep">
+
+        <div class="fila"><span class="k">Emisión</span><span class="v">{{ ticket.fecha_emision|date:"d/m/Y H:i" }}</span></div>
+
+        <div class="caja chico">
+            Boleto válido únicamente para la fecha y hora indicadas. Preséntese 30 minutos
+            antes de la salida. El equipaje debe ir rotulado y declarado en boletería.
+            La empresa no responde por objetos de valor no declarados. Boleto personal
+            e intransferible. Conserve este comprobante durante todo el viaje.
+        </div>
+
+        <div class="fila"><span class="k">N° boleto</span><span class="v">{{ ticket.id_ticket|stringformat:"08d" }}</span></div>
+        <div class="fila"><span class="k">Código</span><span class="v">{{ ticket.codigo }}</span></div>
+
+        <hr class="sep">
+
+        <div class="centro chico">¡Gracias por viajar con JetSur!</div>
+
+    </div>
+
+    <div class="acciones">
+        <button type="button" onclick="window.print()">Imprimir</button>
+        <a href="{% url 'viajes:lista' %}">Volver a viajes</a>
+    </div>
+
+</body>
+</html>
