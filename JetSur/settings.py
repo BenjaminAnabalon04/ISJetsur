@@ -12,21 +12,24 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-e5fbr&3i77^72i&g)702gi$-mc%&mlb#h-$!(b(xaow9-786j5'
+SECRET_KEY = env.str('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG',default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = tuple(env.list('ALLOWED_HOST', default=[]))
 
 
 # Application definition
@@ -78,17 +81,15 @@ WSGI_APPLICATION = 'JetSur.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'brp5mmonub9sykdl930a', 
-    	'USER': 'u0g17q50otro4lgm',  
-    	'PASSWORD': 'QuGRJ6mRVH8Lskrw1nqZ',  
-    	'HOST': 'brp5mmonub9sykdl930a-mysql.services.clever-cloud.com',  
-   	    'PORT': '3306',  
-        'CONN_MAX_AGE': 60,                        
-        'OPTIONS': {'connect_timeout': 10},
-	}
-
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT', default='3306'),
+        'CONN_MAX_AGE': env.int('DB_CONN_MAX_AGE', default=60),
+        
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
