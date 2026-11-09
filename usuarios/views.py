@@ -23,7 +23,7 @@ def usuarios(request):
                 return redirect('usuarios:dashboard')
             else:
                 return render(request, 'usuarios/login.html', {
-                    'error': 'Contraseña incorrecta',
+                    'error': '"Correo o contraseña incorrectos"',
                     'correo': correo_form,
                 })
 
@@ -39,10 +39,7 @@ def usuarios(request):
 def dashboard(request):
     if not request.session.get('usuario_id'):
         return redirect('usuarios:usuarios')
-
     ahora = timezone.now()
-
-    # Próximas salidas con cupos reales
     proximos = list(
         Viaje.objects.filter(estado='programado', salida__gte=ahora)
         .order_by('salida')[:3]
@@ -50,15 +47,11 @@ def dashboard(request):
     cupos = services.cupos_por_viaje(proximos)
     for viaje in proximos:
         viaje.cupos = cupos.get(viaje.id_viaje, services.TOTAL_ASIENTOS)
-
-    # Reservas pendientes de cobro
     pendientes_qs = (
         Reserva.objects.filter(estado='pendiente', activa=1)
         .select_related('id_viaje')
         .order_by('fecha_reserva')
     )
-
-    # Movimiento del día (por rango, sin __date)
     hoy = datetime.now().date()
     inicio = datetime.combine(hoy, time.min)
     fin = inicio + timedelta(days=1)

@@ -16,8 +16,6 @@ def sesion_requerida(vista):
         return vista(request, *args, **kwargs)
     return envoltura
 
-
-@sesion_requerida
 @sesion_requerida
 def lista(request):
     origen = request.GET.get('origen', 'Santiago').strip()
