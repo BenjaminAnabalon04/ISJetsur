@@ -16,7 +16,8 @@
             <a href="#" class="nav-link">Devoluciones</a>
             {% if request.session.rol == 'Administrador' %}
                 <a href="#" class="nav-link">Reportes</a>
-                <a href="#" class="nav-link">Usuarios</a>
+                <a href="{% url 'usuarios:lista_usuarios' %}"
+                class="nav-link {% if activo == 'usuarios' %}active{% endif %}">Usuarios</a>
             {% endif %}
         </nav>
 
