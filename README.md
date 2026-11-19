@@ -80,7 +80,7 @@ ISJetsur/
    DB_NAME=nombre_tu_db
    DB_USER=tu_user
    DB_PASSWORD=tu_contraseña
-   DB_HOST=tu_host
+   DB_HOST=127.0.0.1
    DB_PORT=3306
    DB_CONN_MAX_AGE=60
    ```
@@ -107,8 +107,8 @@ Solo para entorno de desarrollo:
 
 | Rol           | Correo             | Contraseña  |
 |---------------|--------------------|-------------|
-| Administrador | admin@jetsur.cl    | `admin123`  |
-| Cajero        | cajero@jetsur.cl   | `cajero123` |
+| Administrador | admin@jetsur.com    | `admin123`  |
+| Cajero        | cajero@jetsur.com   | `cajero123` |
 
 > **Importante:** estas credenciales son únicamente de prueba. Elimínalas o cámbialas antes de desplegar en producción.
 
