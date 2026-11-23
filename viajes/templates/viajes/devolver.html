@@ -1,0 +1,34 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Devolución · {{ ticket.codigo }}{% endblock %}
+{% block page_title %}Devolver ticket {{ ticket.codigo }}{% endblock %}
+{% block page_subtitle %}Revisa el monto antes de confirmar{% endblock %}
+{% block page_actions %}
+<a href="{% url 'viajes:devoluciones' %}" class="btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block app_content %}
+<div class="card cobro-card">
+    <table class="table">
+        <tbody>
+            <tr><th>Pasajero</th><td>{{ reserva.nombre_pasajero }}</td></tr>
+            <tr><th>RUT</th><td>{{ reserva.rut_pasajero }}</td></tr>
+            <tr><th>Ruta</th><td>{{ viaje.origen }} → {{ viaje.destino }}</td></tr>
+            <tr><th>Salida</th><td>{{ viaje.salida|date:"d/m/Y H:i" }}</td></tr>
+            <tr><th>Asiento</th><td>{{ reserva.numero_asiento }}</td></tr>
+            <tr><th>Pagado</th><td>$ {{ venta.monto|floatformat:0 }} ({{ venta.medio|capfirst }})</td></tr>
+            <tr><th>Porcentaje a devolver</th><td>{{ porcentaje|floatformat:0 }}%</td></tr>
+            <tr><th>Monto a devolver</th><td class="strong">$ {{ monto|floatformat:0 }}</td></tr>
+        </tbody>
+    </table>
+
+    <div class="alert alert-warning">
+        Al confirmar, la reserva queda <strong>cancelada</strong> y el asiento vuelve a estar disponible.
+    </div>
+
+    <form method="post" onsubmit="return confirm('¿Confirmar la devolución?');">
+        {% csrf_token %}
+        <button type="submit" class="btn-solid">Confirmar devolución</button>
+    </form>
+</div>
+{% endblock %}

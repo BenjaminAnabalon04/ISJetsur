@@ -4,8 +4,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from . import services
-from .forms import CobroForm, ReservaForm
-from .models import Reserva, Ticket, Venta, Viaje
+from .forms import CobroForm, ReservaForm, ViajeForm
+from .models import Devolucion, Reserva, Ticket, Venta, Viaje
 
 
 def sesion_requerida(vista):
@@ -16,8 +16,20 @@ def sesion_requerida(vista):
         return vista(request, *args, **kwargs)
     return envoltura
 
+def solo_admin(vista):
+    @wraps(vista)
+    @sesion_requerida
+    def envoltura(request, *args, **kwargs):
+        if request.session.get('rol') != 'Administrador':
+            messages.error(request, 'Solo el administrador puede hacer esto.')
+            return redirect('usuarios:dashboard')
+        return vista(request, *args, **kwargs)
+    return envoltura
+
+
 @sesion_requerida
 def lista(request):
+    services.expirar_reservas()
     origen = request.GET.get('origen', 'Santiago').strip()
     destino = request.GET.get('destino', 'Chillán').strip()
     fecha = request.GET.get('fecha', '').strip()
@@ -42,6 +54,7 @@ def lista(request):
     })
 @sesion_requerida
 def asientos(request, id_viaje):
+    services.expirar_reservas()
     viaje = get_object_or_404(Viaje, pk=id_viaje)
     ocupados = services.asientos_ocupados(viaje)
     filas = [
@@ -86,9 +99,13 @@ def reservar(request, id_viaje):
 
 @sesion_requerida
 def cobrar(request, id_reserva):
+    services.expirar_reservas()
     reserva = get_object_or_404(
         Reserva.objects.select_related('id_viaje'), pk=id_reserva
     )
+    if request.method == 'GET' and reserva.estado == 'expirada':
+        messages.error(request, 'La reserva expiró por falta de pago y el asiento fue liberado.')
+        return redirect('viajes:asientos', id_viaje=reserva.id_viaje_id)
     if reserva.estado == 'confirmada':
         ticket = Ticket.objects.filter(id_reserva=reserva).first()
         if ticket:
@@ -116,6 +133,8 @@ def cobrar(request, id_reserva):
         'activo': 'viajes',
         'reserva': reserva,
         'viaje': reserva.id_viaje,
+        'vence': services.vence_reserva(reserva),
+        'minutos': services.MINUTOS_RESERVA,
     })
 
 
@@ -151,3 +170,69 @@ def cancelar(request, id_reserva):
         f'Reserva #{id_reserva} cancelada. El asiento quedó libre.'
     )
     return redirect('viajes:asientos', id_viaje=id_viaje)
+
+
+# ----------------------------------------------------------------------
+# Viajes nuevos (administrador)
+# ----------------------------------------------------------------------
+@solo_admin
+def viaje_nuevo(request):
+    formulario = ViajeForm(request.POST or None)
+    if request.method == 'POST':
+        if formulario.is_valid():
+            try:
+                viaje = services.crear_viaje(**formulario.cleaned_data)
+            except services.VentaError as error:
+                messages.error(request, str(error))
+            else:
+                messages.success(request, f'Viaje creado: {viaje.origen} → {viaje.destino}.')
+                return redirect('viajes:lista')
+        else:
+            messages.error(request, 'Revisa los datos: origen, destino, fecha y tarifa.')
+    return render(request, 'viajes/viaje_nuevo.html', {
+        'activo': 'viajes',
+        'datos': request.POST,
+    })
+
+
+# ----------------------------------------------------------------------
+# Devoluciones
+# ----------------------------------------------------------------------
+@sesion_requerida
+def devoluciones(request):
+    codigo = request.GET.get('codigo', '').strip()
+    if codigo:
+        return redirect('viajes:devolver', codigo=codigo.upper())
+
+    historial = (
+        Devolucion.objects
+        .select_related('id_venta__id_ticket__id_reserva__id_viaje')
+        .order_by('-fecha')[:30]
+    )
+    return render(request, 'viajes/devoluciones.html', {
+        'activo': 'devoluciones',
+        'devoluciones': historial,
+    })
+
+
+@sesion_requerida
+def devolver(request, codigo):
+    try:
+        datos = services.datos_devolucion(codigo)
+    except services.VentaError as error:
+        messages.error(request, str(error))
+        return redirect('viajes:devoluciones')
+
+    if request.method == 'POST':
+        try:
+            devolucion = services.registrar_devolucion(codigo, request.session['usuario_id'])
+        except services.VentaError as error:
+            messages.error(request, str(error))
+            return redirect('viajes:devoluciones')
+        messages.success(
+            request,
+            f'Devolución registrada: $ {devolucion.monto:.0f} ({devolucion.porcentaje:.0f}%). Asiento liberado.'
+        )
+        return redirect('viajes:devoluciones')
+
+    return render(request, 'viajes/devolver.html', {'activo': 'devoluciones', **datos})

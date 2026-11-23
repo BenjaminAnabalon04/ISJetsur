@@ -11,9 +11,8 @@
 
         <nav class="topnav">
             <a href="{% url 'usuarios:dashboard' %}" class="nav-link {% if activo == 'dashboard' %}active{% endif %}">Dashboard</a>
-            <a href="#" class="nav-link">Ventas</a>
             <a href="{% url 'viajes:lista' %}" class="nav-link {% if activo == 'viajes' %}active{% endif %}">Viajes</a>
-            <a href="#" class="nav-link">Devoluciones</a>
+            <a href="{% url 'viajes:devoluciones' %}" class="nav-link {% if activo == 'devoluciones' %}active{% endif %}">Devoluciones</a>
             {% if request.session.rol == 'Administrador' %}
                 <a href="#" class="nav-link">Reportes</a>
                 <a href="#" class="nav-link">Usuarios</a>

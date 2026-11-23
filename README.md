@@ -111,4 +111,3 @@ Solo para entorno de desarrollo:
 | Cajero        | cajero@jetsur.com   | `cajero123` |
 
 > **Importante:** estas credenciales son únicamente de prueba. Elimínalas o cámbialas antes de desplegar en producción.
-

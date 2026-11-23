@@ -1,0 +1,56 @@
+{% extends 'base_app.html' %}
+
+{% block title %}JetSur · Devoluciones{% endblock %}
+{% block page_title %}Devoluciones{% endblock %}
+{% block page_subtitle %}Busca el ticket por su código para devolver el pasaje{% endblock %}
+{% block page_actions %}
+<a href="{% url 'usuarios:dashboard' %}" class="btn-ghost">← Volver al panel</a>
+{% endblock %}
+
+{% block app_content %}
+
+<form method="get" class="search-bar">
+    <div class="search-field">
+        <label for="codigo">Código del ticket</label>
+        <input type="text" id="codigo" name="codigo" class="form-control"
+               placeholder="JTS-A1B2C3" autocomplete="off" required>
+    </div>
+    <div class="search-actions">
+        <button type="submit" class="btn-solid">Buscar ticket</button>
+    </div>
+</form>
+
+<section class="card">
+    <div class="card-header"><h2>Últimas devoluciones</h2></div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Ticket</th>
+                    <th>Ruta</th>
+                    <th class="num">%</th>
+                    <th class="num">Monto devuelto</th>
+                    <th>Medio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in devoluciones %}
+                {% with t=d.id_venta.id_ticket %}
+                <tr>
+                    <td>{{ d.fecha|date:"d/m/Y H:i" }}</td>
+                    <td class="mono">{{ t.codigo }}</td>
+                    <td>{{ t.id_reserva.id_viaje.origen }} → {{ t.id_reserva.id_viaje.destino }}</td>
+                    <td class="num">{{ d.porcentaje|floatformat:0 }}%</td>
+                    <td class="num strong">$ {{ d.monto|floatformat:0 }}</td>
+                    <td>{{ d.medio|capfirst }}</td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr><td colspan="6" class="table-empty">Aún no hay devoluciones.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
