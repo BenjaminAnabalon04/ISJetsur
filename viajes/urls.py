@@ -11,5 +11,7 @@ urlpatterns = [
     path('reservas/<int:id_reserva>/cobrar/', views.cobrar, name='cobrar'),
     path('tickets/<str:codigo>/', views.ticket, name='ticket'),
     path('reservas/<int:id_reserva>/cancelar/', views.cancelar, name='cancelar'),
-    path('tickets/<str:codigo>/', views.ticket, name='ticket'),
+    path('nuevo/', views.viaje_nuevo, name='nuevo'),
+    path('devoluciones/', views.devoluciones, name='devoluciones'),
+    path('devoluciones/<str:codigo>/', views.devolver, name='devolver'),
 ]

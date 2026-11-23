@@ -21,8 +21,9 @@
         </tbody>
     </table>
 <div class="alert alert-warning">
-    Esta reserva está <strong>pendiente de pago</strong>: el asiento está retenido.
-    Si no se cobra, cancélala para liberarlo.
+    Esta reserva está <strong>pendiente de pago</strong>: el asiento está retenido
+    hasta las <strong>{{ vence|time:"H:i" }}</strong> ({{ minutos }} minutos desde la reserva).
+    Si no se cobra antes, la reserva <strong>expira automáticamente</strong> y el asiento queda disponible.
 </div>
     <form method="post">
         {% csrf_token %}

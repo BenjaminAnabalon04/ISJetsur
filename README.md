@@ -107,8 +107,7 @@ Solo para entorno de desarrollo:
 
 | Rol           | Correo             | Contraseña  |
 |---------------|--------------------|-------------|
-| Administrador | admin@jetsur.cl    | `admin123`  |
-| Cajero        | cajero@jetsur.cl   | `cajero123` |
+| Administrador | admin@jetsur.com    | `admin123`  |
+| Cajero        | cajero@jetsur.com   | `cajero123` |
 
 > **Importante:** estas credenciales son únicamente de prueba. Elimínalas o cámbialas antes de desplegar en producción.
-

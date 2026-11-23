@@ -4,7 +4,12 @@
 {% block page_title %}Próximos viajes{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'usuarios:dashboard' %}" class="btn-ghost">← Volver al panel</a>
+<div class="btn-row">
+    <a href="{% url 'usuarios:dashboard' %}" class="btn-ghost">← Volver al panel</a>
+    {% if request.session.rol == 'Administrador' %}
+        <a href="{% url 'viajes:nuevo' %}" class="btn-solid">+ Nuevo viaje</a>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block app_content %}

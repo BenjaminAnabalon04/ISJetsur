@@ -5,7 +5,10 @@ from django.db.models import Count
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
-from .models import Reserva, Ticket, Venta, Viaje
+from datetime import timedelta
+from decimal import Decimal, ROUND_HALF_UP
+
+from .models import Devolucion, Reserva, Ticket, Venta, Viaje
 
 TOTAL_ASIENTOS = 30
 
@@ -75,9 +78,31 @@ def cupos_por_viaje(viajes):
 
 
 # ----------------------------------------------------------------------
+# Expiración automática de reservas pendientes
+# ----------------------------------------------------------------------
+# TIEMPO SUPUESTO: confirmar con el profesor cuántos minutos corresponde.
+MINUTOS_RESERVA = 10
+
+
+def vence_reserva(reserva):
+    return reserva.fecha_reserva + timedelta(minutes=MINUTOS_RESERVA)
+
+
+def expirar_reservas():
+    """Libera los asientos de reservas pendientes que pasaron el tiempo límite."""
+    limite = timezone.now() - timedelta(minutes=MINUTOS_RESERVA)
+    return (
+        Reserva.objects
+        .filter(estado='pendiente', activa=1, fecha_reserva__lt=limite)
+        .update(estado='expirada', activa=None)
+    )
+
+
+# ----------------------------------------------------------------------
 # Reserva
 # ----------------------------------------------------------------------
 def crear_reserva(id_viaje, numero_asiento, nombre,rut, telefono, id_usuario):
+    expirar_reservas()
     nombre = (nombre or '').strip()
     telefono = (telefono or '').strip()
     rut_formateado = normalizar_rut(rut)
@@ -133,6 +158,8 @@ def cobrar_reserva(id_reserva, medio, id_usuario):
     if medio not in ('efectivo', 'tarjeta'):
         raise VentaError('Medio de pago no válido.')
 
+    expirar_reservas()
+
     with transaction.atomic():
         reserva = (
             Reserva.objects
@@ -141,6 +168,8 @@ def cobrar_reserva(id_reserva, medio, id_usuario):
             .get(pk=id_reserva)
         )
 
+        if reserva.estado == 'expirada':
+            raise VentaError('La reserva expiró por falta de pago y el asiento fue liberado.')
         if reserva.estado != 'pendiente':
             raise VentaError('Esta reserva ya fue cobrada o cancelada.')
 
@@ -220,3 +249,103 @@ def cancelar_reserva(id_reserva):
         reserva.save(update_fields=['estado', 'activa'])
 
         return reserva
+
+
+# ----------------------------------------------------------------------
+# Viajes nuevos (solo administrador)
+# ----------------------------------------------------------------------
+def crear_viaje(origen, destino, salida, tarifa):
+    origen = (origen or '').strip().title()
+    destino = (destino or '').strip().title()
+
+    if origen.lower() == destino.lower():
+        raise VentaError('El origen y el destino no pueden ser iguales.')
+    if salida <= timezone.now():
+        raise VentaError('La fecha de salida debe ser futura.')
+    if tarifa <= 0:
+        raise VentaError('La tarifa debe ser mayor a 0.')
+    if Viaje.objects.filter(origen=origen, destino=destino, salida=salida).exists():
+        raise VentaError('Ya existe un viaje con ese origen, destino y salida.')
+
+    with transaction.atomic():
+        viaje = Viaje.objects.create(
+            origen=origen, destino=destino, salida=salida,
+            tarifa=tarifa, estado='programado',
+        )
+        crear_asientos(viaje.id_viaje)   # los 30 asientos del viaje
+        return viaje
+
+
+# ----------------------------------------------------------------------
+# Devoluciones
+# ----------------------------------------------------------------------
+# REGLA DE NEGOCIO SUPUESTA: confirmar/ajustar con el profesor o el grupo.
+# (horas_minimas_antes_de_la_salida, porcentaje_a_devolver)
+TRAMOS_DEVOLUCION = [
+    (24, Decimal('100')),
+    (2, Decimal('50')),
+]
+
+
+def porcentaje_devolucion(salida):
+    """Porcentaje que se devuelve según cuánto falta para la salida."""
+    horas = (salida - timezone.now()) / timedelta(hours=1)
+    for minimo, porcentaje in TRAMOS_DEVOLUCION:
+        if horas >= minimo:
+            return porcentaje
+    return Decimal('0')
+
+
+def datos_devolucion(codigo):
+    """Todo lo necesario para mostrar/confirmar la devolución de un ticket."""
+    ticket = (
+        Ticket.objects.select_related('id_reserva__id_viaje')
+        .filter(codigo=codigo.strip().upper()).first()
+    )
+    if not ticket:
+        raise VentaError('No existe un ticket con ese código.')
+
+    venta = Venta.objects.filter(id_ticket=ticket).first()
+    if not venta:
+        raise VentaError('Este ticket no tiene una venta asociada.')
+    if Devolucion.objects.filter(id_venta=venta).exists():
+        raise VentaError('Este ticket ya fue devuelto.')
+
+    reserva = ticket.id_reserva
+    viaje = reserva.id_viaje
+    if reserva.estado != 'confirmada':
+        raise VentaError('Solo se pueden devolver reservas confirmadas.')
+    if viaje.salida <= timezone.now():
+        raise VentaError('El viaje ya salió: no se puede devolver.')
+
+    porcentaje = porcentaje_devolucion(viaje.salida)
+    if porcentaje <= 0:
+        raise VentaError('Faltan menos de 2 horas para la salida: no corresponde devolución.')
+
+    monto = (venta.monto * porcentaje / 100).quantize(Decimal('1'), ROUND_HALF_UP)
+    return {'ticket': ticket, 'venta': venta, 'reserva': reserva, 'viaje': viaje,
+            'porcentaje': porcentaje, 'monto': monto}
+
+
+def registrar_devolucion(codigo, id_usuario):
+    with transaction.atomic():
+        datos = datos_devolucion(codigo)
+        reserva = Reserva.objects.select_for_update().get(pk=datos['reserva'].pk)
+        if reserva.estado != 'confirmada':
+            raise VentaError('Solo se pueden devolver reservas confirmadas.')
+
+        try:
+            devolucion = Devolucion.objects.create(
+                monto=datos['monto'],
+                porcentaje=datos['porcentaje'],
+                medio=datos['venta'].medio,
+                id_venta=datos['venta'],
+                id_usuario_id=id_usuario,
+            )
+        except IntegrityError:
+            raise VentaError('Este ticket ya fue devuelto.')
+
+        reserva.estado = 'cancelada'
+        reserva.activa = None            # libera el asiento
+        reserva.save(update_fields=['estado', 'activa'])
+        return devolucion

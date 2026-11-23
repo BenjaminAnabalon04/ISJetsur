@@ -76,3 +76,24 @@ class Venta(models.Model):
 
     def __str__(self):
         return f'Venta #{self.id_venta} · {self.monto}'
+
+class Devolucion(models.Model):
+    id_devolucion = models.AutoField(primary_key=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+    medio = models.CharField(max_length=20)
+    # Una venta tiene como máximo una devolución (0..1 en el diagrama de clases)
+    id_venta = models.OneToOneField(
+        Venta, on_delete=models.DO_NOTHING, db_column='id_venta'
+    )
+    id_usuario = models.ForeignKey(
+        'usuarios.Usuario', on_delete=models.DO_NOTHING, db_column='id_usuario'
+    )
+
+    class Meta:
+        managed = False
+        db_table = 'devolucion'
+
+    def __str__(self):
+        return f'Devolución #{self.id_devolucion} · {self.monto}'

@@ -5,7 +5,7 @@ from .models import Usuario
 from django.utils import timezone
 from datetime import datetime, timedelta,time
 from viajes import services
-from viajes.models import Reserva, Ticket, Venta, Viaje
+from viajes.models import Devolucion, Reserva, Ticket, Venta, Viaje
 
 
 def usuarios(request):
@@ -58,7 +58,8 @@ def dashboard(request):
 
     ventas_hoy = Venta.objects.filter(fecha__gte=inicio, fecha__lt=fin)
     vendido = ventas_hoy.aggregate(total=Sum('monto'))['total'] or 0
-
+    devs_hoy = Devolucion.objects.filter(fecha__gte=inicio, fecha__lt=fin)
+    devuelto = devs_hoy.aggregate(total=Sum('monto'))['total'] or 0
     tickets = []
     for t in (
         Ticket.objects.filter(fecha_emision__gte=inicio, fecha_emision__lt=fin)
@@ -82,9 +83,9 @@ def dashboard(request):
         'pendientes': pendientes_qs.count(),
         'vendido_hoy': vendido,
         'ventas_hoy': ventas_hoy.count(),
-        'devuelto_hoy': 0,
-        'devoluciones_hoy': 0,
-        'neto_hoy': vendido,
+        'devuelto_hoy': devuelto,
+        'devoluciones_hoy': devs_hoy.count(),
+        'neto_hoy': vendido - devuelto,
     })
 
 def logout_view(request):
