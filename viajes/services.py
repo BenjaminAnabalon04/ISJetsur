@@ -98,6 +98,15 @@ def expirar_reservas():
     )
 
 
+def marcar_viajes_salidos():
+    """Marca como 'finalizado' los viajes programados cuya salida ya pasó."""
+    return (
+        Viaje.objects
+        .filter(estado='programado', salida__lt=timezone.now())
+        .update(estado='finalizado')
+    )
+
+
 # ----------------------------------------------------------------------
 # Reserva
 # ----------------------------------------------------------------------

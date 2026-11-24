@@ -30,8 +30,9 @@ def solo_admin(vista):
 @sesion_requerida
 def lista(request):
     services.expirar_reservas()
-    origen = request.GET.get('origen', 'Santiago').strip()
-    destino = request.GET.get('destino', 'Chillán').strip()
+    services.marcar_viajes_salidos()
+    origen = request.GET.get('origen', '').strip()
+    destino = request.GET.get('destino', '').strip()
     fecha = request.GET.get('fecha', '').strip()
     viajes = services.buscar_viajes(origen, destino, fecha)
     cupos = services.cupos_por_viaje(viajes)
@@ -55,6 +56,7 @@ def lista(request):
 @sesion_requerida
 def asientos(request, id_viaje):
     services.expirar_reservas()
+    services.marcar_viajes_salidos()
     viaje = get_object_or_404(Viaje, pk=id_viaje)
     ocupados = services.asientos_ocupados(viaje)
     filas = [
@@ -100,6 +102,7 @@ def reservar(request, id_viaje):
 @sesion_requerida
 def cobrar(request, id_reserva):
     services.expirar_reservas()
+    services.marcar_viajes_salidos()
     reserva = get_object_or_404(
         Reserva.objects.select_related('id_viaje'), pk=id_reserva
     )

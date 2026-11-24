@@ -242,6 +242,7 @@ def dashboard(request):
     if not request.session.get('usuario_id'):
         return redirect('usuarios:usuarios')
 
+    services.marcar_viajes_salidos()
     ahora = timezone.now()
     proximos = list(
         Viaje.objects.filter(estado='programado', salida__gte=ahora)
