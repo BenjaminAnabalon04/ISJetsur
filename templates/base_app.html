@@ -33,7 +33,55 @@
 </div>
 {% endblock %}
 
-{% block footer %}{% endblock %}
+{% block footer %}
+<div class="modal-overlay" id="confirm-modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h2 class="modal-title" id="confirm-title">Confirmar acción</h2>
+        <p class="modal-text" id="confirm-text"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn-ghost" id="confirm-cancel">Cancelar</button>
+            <button type="button" class="btn-solid btn-solid-danger" id="confirm-ok">Confirmar</button>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var modal = document.getElementById('confirm-modal');
+    var titulo = document.getElementById('confirm-title');
+    var texto = document.getElementById('confirm-text');
+    var ok = document.getElementById('confirm-ok');
+    var cancelar = document.getElementById('confirm-cancel');
+    var pendiente = null;
+
+    function cerrar() { modal.hidden = true; pendiente = null; }
+
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        var mensaje = form.getAttribute('data-confirm');
+        if (!mensaje) return;
+        e.preventDefault();
+        pendiente = form;
+        titulo.textContent = form.getAttribute('data-confirm-title') || 'Confirmar acción';
+        texto.textContent = mensaje;
+        ok.textContent = form.getAttribute('data-confirm-ok') || 'Confirmar';
+        modal.hidden = false;
+        cancelar.focus();
+    });
+
+    ok.addEventListener('click', function () {
+        if (!pendiente) return;
+        var form = pendiente;
+        cerrar();
+        form.submit();
+    });
+    cancelar.addEventListener('click', cerrar);
+    modal.addEventListener('click', function (e) { if (e.target === modal) cerrar(); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) cerrar();
+    });
+})();
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="app-shell">

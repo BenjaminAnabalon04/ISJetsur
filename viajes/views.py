@@ -38,6 +38,14 @@ def lista(request):
     cupos = services.cupos_por_viaje(viajes)
     for viaje in viajes:
         viaje.cupos = cupos.get(viaje.id_viaje, services.TOTAL_ASIENTOS)
+    if request.session.get('rol') == 'Administrador':
+        con_reservas = set(
+            Reserva.objects
+            .filter(id_viaje__in=[v.id_viaje for v in viajes])
+            .values_list('id_viaje', flat=True)
+        )
+        for viaje in viajes:
+            viaje.editable = viaje.id_viaje not in con_reservas
     origenes = list(
         Viaje.objects.order_by('origen').values_list('origen', flat=True).distinct()
     )
@@ -327,3 +335,50 @@ def cambiar(request, id_reserva):
         'ocupados': ocupados,
         'filas': filas,
     })
+
+@solo_admin
+def viaje_editar(request, id_viaje):
+    viaje = get_object_or_404(Viaje, pk=id_viaje)
+    if services.viaje_tiene_reservas(viaje.id_viaje):
+        messages.error(request, 'Este viaje ya tiene reservas: no se puede modificar.')
+        return redirect('viajes:lista')
+
+    if request.method == 'POST':
+        formulario = ViajeForm(request.POST)
+        if formulario.is_valid():
+            try:
+                services.editar_viaje(viaje.id_viaje, **formulario.cleaned_data)
+            except services.VentaError as error:
+                messages.error(request, str(error))
+            else:
+                messages.success(request, 'Viaje actualizado.')
+                return redirect('viajes:lista')
+        else:
+            messages.error(request, 'Revisa los datos: origen, destino, fecha y tarifa.')
+        datos = request.POST
+    else:
+        datos = {
+            'origen': viaje.origen,
+            'destino': viaje.destino,
+            'salida': viaje.salida.strftime('%Y-%m-%dT%H:%M'),
+            'tarifa': int(viaje.tarifa),
+        }
+
+    return render(request, 'viajes/viaje_nuevo.html', {
+        'activo': 'viajes',
+        'datos': datos,
+        'viaje': viaje,
+    })
+
+
+@solo_admin
+def viaje_eliminar(request, id_viaje):
+    if request.method != 'POST':
+        return redirect('viajes:lista')
+    try:
+        services.eliminar_viaje(id_viaje)
+    except services.VentaError as error:
+        messages.error(request, str(error))
+    else:
+        messages.success(request, 'Viaje eliminado.')
+    return redirect('viajes:lista')

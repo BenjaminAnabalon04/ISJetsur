@@ -14,6 +14,8 @@ urlpatterns = [
     path('reservas/<int:id_reserva>/cambiar/', views.cambiar, name='cambiar'),
     path('reservas/<int:id_reserva>/cancelar/', views.cancelar, name='cancelar'),
     path('nuevo/', views.viaje_nuevo, name='nuevo'),
+    path('<int:id_viaje>/editar/', views.viaje_editar, name='editar'),
+    path('<int:id_viaje>/eliminar/', views.viaje_eliminar, name='eliminar'),
     path('devoluciones/', views.devoluciones, name='devoluciones'),
     path('devoluciones/<str:codigo>/', views.devolver, name='devolver'),
 ]

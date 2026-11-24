@@ -45,7 +45,8 @@
 </div>
 <a href="{% url 'viajes:cambiar' reserva.id_reserva %}" class="btn-ghost">Cambiar asiento o viaje</a>
 <form method="post" action="{% url 'viajes:cancelar' reserva.id_reserva %}"
-      onsubmit="return confirm('¿Cancelar la reserva y liberar el asiento?');">
+      data-confirm="Se cancelará la reserva y el asiento quedará libre."
+      data-confirm-title="Cancelar reserva" data-confirm-ok="Sí, cancelar">
     {% csrf_token %}
     <button type="submit" class="btn-danger">Cancelar reserva</button>
 </form>

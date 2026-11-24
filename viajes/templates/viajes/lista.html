@@ -57,7 +57,7 @@
 <div class="viajes-results">
     {% for v in viajes %}
     <article class="card viaje-card">
-        <div class="viaje-main">
+        <div class="viaje-main {% if request.session.rol == 'Administrador' %}viaje-main-admin{% endif %}">
             <div class="viaje-hora">{{ v.salida|date:"H:i" }}</div>
             <div class="viaje-info">
                 <span class="viaje-ruta">{{ v.origen }} → {{ v.destino }}</span>
@@ -71,11 +71,22 @@
                 <span class="viaje-label">Cupos</span>
                 <span class="viaje-valor">{{ v.cupos }} / 30</span>
             </div>
-            {% if v.cupos > 0 %}
-                <a href="{% url 'viajes:asientos' v.id_viaje %}" class="btn-sm">Ver asientos</a>
-            {% else %}
-                <span class="badge-warn">Agotado</span>
-            {% endif %}
+            <div class="viaje-acciones">
+                {% if v.cupos > 0 %}
+                    <a href="{% url 'viajes:asientos' v.id_viaje %}" class="btn-sm">Ver asientos</a>
+                {% else %}
+                    <span class="badge-warn">Agotado</span>
+                {% endif %}
+                {% if request.session.rol == 'Administrador' and v.editable %}
+                    <a href="{% url 'viajes:editar' v.id_viaje %}" class="btn-sm btn-sm-ghost">Editar</a>
+                    <form method="post" action="{% url 'viajes:eliminar' v.id_viaje %}" class="inline-form"
+                          data-confirm="Se eliminará el viaje {{ v.origen }} → {{ v.destino }} y sus 30 asientos. Esta acción no se puede deshacer."
+                          data-confirm-title="Eliminar viaje" data-confirm-ok="Eliminar">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-sm btn-sm-danger">Eliminar</button>
+                    </form>
+                {% endif %}
+            </div>
         </div>
     </article>
     {% empty %}
