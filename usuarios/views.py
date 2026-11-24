@@ -241,7 +241,8 @@ def desbloquear_usuario(request, id_usuario):
 def dashboard(request):
     if not request.session.get('usuario_id'):
         return redirect('usuarios:usuarios')
-
+    
+    services.expirar_reservas()     
     services.marcar_viajes_salidos()
     ahora = timezone.now()
     proximos = list(

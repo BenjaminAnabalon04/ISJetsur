@@ -153,6 +153,7 @@ def ticket(request, codigo):
         'reserva': boleto.id_reserva,
         'viaje': boleto.id_reserva.id_viaje,
         'venta': venta,
+        'anulado': boleto.id_reserva.estado == 'cancelada',
     })
 @sesion_requerida
 def cancelar(request, id_reserva):
