@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, time
 
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
+from django.db import IntegrityError
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -10,7 +11,7 @@ from django.utils import timezone
 from viajes import services
 from viajes.models import Devolucion, Reserva, Ticket, Venta, Viaje
 
-from .forms import CrearUsuarioForm
+from .forms import CrearUsuarioForm, EditarUsuarioForm
 from .models import Usuario
 
 INTENTOS_MAXIMOS = 3
@@ -124,6 +125,104 @@ def crear_usuario(request):
         'activo': 'usuarios',
         'formulario': formulario,
     })
+
+
+@admin_requerido
+def editar_usuario(request, id_usuario):
+    usuario = get_object_or_404(Usuario, pk=id_usuario)
+    es_propio = usuario.pk == request.session.get('usuario_id')
+    # El rol de un administrador no se puede modificar (incluido uno mismo).
+    rol_bloqueado = es_propio or usuario.rol == 'Administrador'
+
+    if request.method == 'POST':
+        formulario = EditarUsuarioForm(
+            request.POST, usuario=usuario, bloquear_rol=rol_bloqueado
+        )
+
+        if formulario.is_valid():
+            datos = formulario.cleaned_data
+            usuario.nombre = datos['nombre'].strip()
+            usuario.correo = datos['correo']
+
+            if not rol_bloqueado:
+                usuario.rol = datos['rol']
+
+            if datos.get('password'):
+                usuario.clave_hash = make_password(datos['password'])
+
+            usuario.save()
+
+            if es_propio:
+                request.session['nombre'] = usuario.nombre
+                request.session['rol'] = usuario.rol
+
+            messages.success(request, f'Usuario {usuario.nombre} actualizado.')
+            return redirect('usuarios:lista_usuarios')
+
+        messages.error(request, 'Revisa los datos del formulario.')
+
+    else:
+        formulario = EditarUsuarioForm(
+            usuario=usuario,
+            bloquear_rol=rol_bloqueado,
+            initial={
+                'nombre': usuario.nombre,
+                'correo': usuario.correo,
+                'rol': usuario.rol,
+            },
+        )
+
+    return render(request, 'usuarios/editar_usuario.html', {
+        'activo': 'usuarios',
+        'formulario': formulario,
+        'usuario_editado': usuario,
+        'es_propio': es_propio,
+        'rol_bloqueado': rol_bloqueado,
+    })
+
+
+@admin_requerido
+def eliminar_usuario(request, id_usuario):
+    if request.method != 'POST':
+        return redirect('usuarios:lista_usuarios')
+
+    usuario = get_object_or_404(Usuario, pk=id_usuario)
+
+    if usuario.pk == request.session.get('usuario_id'):
+        messages.error(request, 'No puedes eliminar tu propia cuenta.')
+        return redirect('usuarios:lista_usuarios')
+
+    if usuario.rol == 'Administrador':
+        messages.error(
+            request,
+            f'{usuario.nombre} es administrador: solo se puede editar, no eliminar.',
+        )
+        return redirect('usuarios:lista_usuarios')
+
+    con_movimientos = (
+        Venta.objects.filter(id_usuario=usuario).exists()
+        or Reserva.objects.filter(id_usuario=usuario).exists()
+        or Devolucion.objects.filter(id_usuario=usuario).exists()
+    )
+    if con_movimientos:
+        messages.error(
+            request,
+            f'{usuario.nombre} tiene ventas, reservas o devoluciones registradas: '
+            'no se puede eliminar. Puedes bloquear la cuenta.',
+        )
+        return redirect('usuarios:lista_usuarios')
+
+    try:
+        usuario.delete()
+    except IntegrityError:
+        messages.error(
+            request,
+            f'{usuario.nombre} tiene registros asociados: no se puede eliminar.',
+        )
+        return redirect('usuarios:lista_usuarios')
+
+    messages.success(request, f'Usuario {usuario.nombre} eliminado.')
+    return redirect('usuarios:lista_usuarios')
 
 
 @admin_requerido

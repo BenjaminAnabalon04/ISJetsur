@@ -279,20 +279,17 @@ def crear_viaje(origen, destino, salida, tarifa):
 # ----------------------------------------------------------------------
 # Devoluciones
 # ----------------------------------------------------------------------
-# REGLA DE NEGOCIO SUPUESTA: confirmar/ajustar con el profesor o el grupo.
-# (horas_minimas_antes_de_la_salida, porcentaje_a_devolver)
-TRAMOS_DEVOLUCION = [
-    (24, Decimal('100')),
-    (2, Decimal('50')),
-]
+# Se devuelve el 85 % del monto si se avisa con al menos 2 horas de
+# anticipación; con menos tiempo no corresponde devolución.
+HORAS_MINIMAS_DEVOLUCION = 2
+PORCENTAJE_DEVOLUCION = Decimal('85')
 
 
 def porcentaje_devolucion(salida):
-    """Porcentaje que se devuelve según cuánto falta para la salida."""
+    """85 % si faltan 2 horas o más para la salida; 0 % si falta menos."""
     horas = (salida - timezone.now()) / timedelta(hours=1)
-    for minimo, porcentaje in TRAMOS_DEVOLUCION:
-        if horas >= minimo:
-            return porcentaje
+    if horas >= HORAS_MINIMAS_DEVOLUCION:
+        return PORCENTAJE_DEVOLUCION
     return Decimal('0')
 
 

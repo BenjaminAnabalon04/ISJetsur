@@ -1,0 +1,157 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Editar usuario · JetSur{% endblock %}
+{% block page_title %}Editar usuario{% endblock %}
+{% block page_subtitle %}{{ usuario_editado.nombre }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'usuarios:lista_usuarios' %}" class="btn-ghost">← Volver</a>
+{% endblock %}
+
+{% block app_content %}
+
+<section class="card form-card">
+    <form method="post" class="usuario-form">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label for="{{ formulario.nombre.id_for_label }}">Nombre completo</label>
+                {{ formulario.nombre }}
+                {% for error in formulario.nombre.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ formulario.correo.id_for_label }}">Correo electrónico</label>
+                {{ formulario.correo }}
+                {% for error in formulario.correo.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-group form-group-full">
+                <label for="{{ formulario.rol.id_for_label }}">Rol</label>
+                {{ formulario.rol }}
+                {% if es_propio %}
+                    <p class="field-hint">No puedes cambiar tu propio rol.</p>
+                {% elif rol_bloqueado %}
+                    <p class="field-hint">El rol de un administrador no se puede modificar.</p>
+                {% else %}
+                    <p class="field-hint">
+                        El administrador puede gestionar usuarios. El cajero solo vende pasajes.
+                    </p>
+                {% endif %}
+                {% for error in formulario.rol.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Nueva contraseña</label>
+
+                <div class="input-group">
+                    {{ formulario.password }}
+                    <button type="button"
+                            class="input-group-btn pw-toggle"
+                            data-target="id_password"
+                            aria-label="Mostrar u ocultar contraseña">Mostrar</button>
+                </div>
+
+                {% for error in formulario.password.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password2">Confirmar nueva contraseña</label>
+
+                <div class="input-group">
+                    {{ formulario.password2 }}
+                    <button type="button"
+                            class="input-group-btn pw-toggle"
+                            data-target="id_password2"
+                            aria-label="Mostrar u ocultar contraseña">Mostrar</button>
+                </div>
+
+                {% for error in formulario.password2.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-group form-group-full">
+                <p class="field-hint">
+                    Deja los campos de contraseña en blanco para conservar la actual.
+                    Si la cambias, debe cumplir con lo siguiente:
+                </p>
+                <ul class="password-req" data-input="id_password">
+                    <li data-rule="length">Mínimo 8 caracteres</li>
+                    <li data-rule="upper">Al menos una mayúscula</li>
+                    <li data-rule="lower">Al menos una minúscula</li>
+                    <li data-rule="digit">Al menos un número</li>
+                    <li data-rule="symbol">Al menos un símbolo (! @ # $ %)</li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'usuarios:lista_usuarios' %}" class="btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-solid">Guardar cambios</button>
+        </div>
+    </form>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const simbolos = new Set("!@#$%^&*()_+-=[]{};':\",.<>/?\\|`~");
+
+    const reglas = {
+        length: valor => valor.length >= 8,
+        upper: valor => Array.from(valor).some(c => c === c.toUpperCase() && c !== c.toLowerCase()),
+        lower: valor => Array.from(valor).some(c => c === c.toLowerCase() && c !== c.toUpperCase()),
+        digit: valor => /\d/.test(valor),
+        symbol: valor => Array.from(valor).some(c => simbolos.has(c)),
+    };
+
+    document.querySelectorAll('.password-req').forEach(function (lista) {
+        const campo = document.getElementById(lista.dataset.input);
+
+        if (!campo) {
+            return;
+        }
+
+        function actualizarChecklist() {
+            const valor = campo.value;
+
+            lista.querySelectorAll('li').forEach(function (item) {
+                const cumple = reglas[item.dataset.rule](valor);
+                item.classList.toggle('req-ok', cumple);
+            });
+        }
+
+        campo.addEventListener('input', actualizarChecklist);
+        actualizarChecklist();
+    });
+
+    document.querySelectorAll('.pw-toggle').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            const input = document.getElementById(boton.dataset.target);
+
+            if (!input) {
+                return;
+            }
+
+            const mostrar = input.type === 'password';
+            input.type = mostrar ? 'text' : 'password';
+            boton.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+        });
+    });
+});
+</script>
+{% endblock %}

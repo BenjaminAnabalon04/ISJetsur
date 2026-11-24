@@ -1,0 +1,62 @@
+{% extends 'base_app.html' %}
+
+{% block title %}JetSur · Tickets{% endblock %}
+{% block page_title %}Tickets{% endblock %}
+{% block page_subtitle %}Busca un ticket por su código o revisa todos los emitidos{% endblock %}
+{% block page_actions %}
+<a href="{% url 'usuarios:dashboard' %}" class="btn-ghost">← Volver al panel</a>
+{% endblock %}
+
+{% block app_content %}
+
+<form method="get" class="search-bar">
+    <div class="search-field">
+        <label for="codigo">Código del ticket</label>
+        <input type="text" id="codigo" name="codigo" class="form-control"
+               value="{{ codigo }}" placeholder="JTS-A1B2C3" autocomplete="off" required>
+    </div>
+    <div class="search-actions">
+        <button type="submit" class="btn-solid">Buscar ticket</button>
+    </div>
+</form>
+
+<section class="card">
+    <div class="card-header"><h2>Tickets emitidos</h2></div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Emisión</th>
+                    <th>Ticket</th>
+                    <th>Pasajero</th>
+                    <th>Ruta</th>
+                    <th>Salida</th>
+                    <th class="num">Asiento</th>
+                    <th class="num">Monto</th>
+                    <th>Medio</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tickets %}
+                {% with v=t.venta_set.all|first %}
+                <tr>
+                    <td>{{ t.fecha_emision|date:"d/m/Y H:i" }}</td>
+                    <td class="mono"><a href="{% url 'viajes:ticket' codigo=t.codigo %}">{{ t.codigo }}</a></td>
+                    <td>{{ t.id_reserva.nombre_pasajero|default:"—" }}</td>
+                    <td>{{ t.id_reserva.id_viaje.origen }} → {{ t.id_reserva.id_viaje.destino }}</td>
+                    <td>{{ t.id_reserva.id_viaje.salida|date:"d/m/Y H:i" }}</td>
+                    <td class="num">{{ t.id_reserva.numero_asiento }}</td>
+                    <td class="num strong">{% if v %}$ {{ v.monto|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td>{{ v.medio|capfirst|default:"—" }}</td>
+                    <td>{{ t.id_reserva.estado|capfirst }}</td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr><td colspan="9" class="table-empty">Aún no hay tickets emitidos.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

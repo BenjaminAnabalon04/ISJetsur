@@ -196,6 +196,30 @@ def viaje_nuevo(request):
 
 
 # ----------------------------------------------------------------------
+# Tickets
+# ----------------------------------------------------------------------
+@sesion_requerida
+def tickets(request):
+    codigo = request.GET.get('codigo', '').strip().upper()
+    if codigo:
+        if Ticket.objects.filter(codigo=codigo).exists():
+            return redirect('viajes:ticket', codigo=codigo)
+        messages.error(request, 'No existe un ticket con ese código.')
+
+    emitidos = (
+        Ticket.objects
+        .select_related('id_reserva__id_viaje')
+        .prefetch_related('venta_set')
+        .order_by('-fecha_emision')
+    )
+    return render(request, 'viajes/tickets.html', {
+        'activo': 'tickets',
+        'tickets': emitidos,
+        'codigo': codigo,
+    })
+
+
+# ----------------------------------------------------------------------
 # Devoluciones
 # ----------------------------------------------------------------------
 @sesion_requerida

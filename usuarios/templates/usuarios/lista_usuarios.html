@@ -20,7 +20,7 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>Correo</th>
+                    <th>Usuario</th>
                     <th>Rol</th>
                     <th>Estado</th>
                     <th class="col-action">Acción</th>
@@ -31,7 +31,7 @@
                 <tr>
                     <td>
                         <div class="usuario-cell">
-                            
+                            <span class="usuario-nombre">{{ u.nombre }}</span>
                             <span class="usuario-correo">{{ u.correo }}</span>
                         </div>
                     </td>
@@ -44,6 +44,9 @@
                         {% endif %}
                     </td>
                     <td class="col-action">
+                        <a href="{% url 'usuarios:editar_usuario' u.id_usuario %}"
+                           class="btn-sm btn-sm-ghost">Editar</a>
+
                         {% if u.estado == 'bloqueada' %}
                         <form method="post"
                               action="{% url 'usuarios:desbloquear_usuario' u.id_usuario %}"
@@ -51,8 +54,18 @@
                             {% csrf_token %}
                             <button type="submit" class="btn-sm">Desbloquear</button>
                         </form>
+                        {% endif %}
+
+                        {% if u.rol == 'Administrador' %}
+                            <span class="muted">Solo edición</span>
                         {% else %}
-                            <span class="muted">—</span>
+                        <form method="post"
+                              action="{% url 'usuarios:eliminar_usuario' u.id_usuario %}"
+                              class="inline-form"
+                              onsubmit="return confirm('¿Eliminar al usuario {{ u.nombre|escapejs }}? Esta acción no se puede deshacer.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-sm">Eliminar</button>
+                        </form>
                         {% endif %}
                     </td>
                 </tr>
