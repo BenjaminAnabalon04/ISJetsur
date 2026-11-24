@@ -154,6 +154,8 @@ a:hover { text-decoration: underline; }
 .viajes-results { display: flex; flex-direction: column; gap: 12px; }
 .viaje-card { padding: 16px 18px; }
 .viaje-main { display: grid; grid-template-columns: 70px 1fr 130px 110px auto; align-items: center; gap: 16px; }
+.viaje-main-admin { grid-template-columns: 70px 1fr 130px 110px 250px; }
+.viaje-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .viaje-hora { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); font-variant-numeric: tabular-nums; }
 .viaje-info { display: flex; flex-direction: column; gap: 2px; }
 .viaje-ruta { font-weight: 600; color: var(--color-dark); }
@@ -622,3 +624,18 @@ a:hover { text-decoration: underline; }
         width: 100%;
     }
 }
+
+
+/* Botón pequeño de peligro */
+.btn-sm-danger { background: var(--color-bg); border: 1px solid var(--color-danger); color: var(--color-danger); }
+.btn-sm-danger:hover { background: #fdecea; color: var(--color-danger); }
+
+/* Ventana de confirmación */
+.modal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 20, 40, .45); }
+.modal-overlay[hidden] { display: none; }
+.modal-box { width: 100%; max-width: 420px; padding: 22px 24px; border-radius: 10px; background: var(--color-bg); box-shadow: 0 12px 40px rgba(0, 0, 0, .25); }
+.modal-title { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--color-dark); }
+.modal-text { margin: 0 0 20px; font-size: 14px; line-height: 1.5; color: var(--color-text); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-solid-danger { border-color: var(--color-danger); background: var(--color-danger); }
+.btn-solid-danger:hover { border-color: #85201d; background: #85201d; }

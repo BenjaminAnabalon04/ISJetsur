@@ -26,7 +26,7 @@
         Al confirmar, la reserva queda <strong>cancelada</strong> y el asiento vuelve a estar disponible.
     </div>
 
-    <form method="post" onsubmit="return confirm('¿Confirmar la devolución?');">
+    <form method="post" data-confirm="Se registrará la devolución y el asiento quedará libre." data-confirm-title="Confirmar devolución" data-confirm-ok="Confirmar devolución">
         {% csrf_token %}
         <button type="submit" class="btn-solid">Confirmar devolución</button>
     </form>

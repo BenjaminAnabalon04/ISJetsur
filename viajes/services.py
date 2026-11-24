@@ -414,3 +414,61 @@ def cambiar_reserva(id_reserva, id_viaje_nuevo, numero_asiento):
     except IntegrityError:
   
         raise VentaError('Ese asiento ya está ocupado. Se conservó la reserva original.')
+
+
+# ----------------------------------------------------------------------
+# Editar y eliminar viajes (solo administrador)
+# ----------------------------------------------------------------------
+def viaje_tiene_reservas(id_viaje):
+    """Un viaje con reservas (de cualquier estado) ya tiene historial."""
+    return Reserva.objects.filter(id_viaje=id_viaje).exists()
+
+
+def editar_viaje(id_viaje, origen, destino, salida, tarifa):
+    origen = (origen or '').strip().title()
+    destino = (destino or '').strip().title()
+
+    if origen.lower() == destino.lower():
+        raise VentaError('El origen y el destino no pueden ser iguales.')
+    if salida <= timezone.now():
+        raise VentaError('La fecha de salida debe ser futura.')
+    if tarifa <= 0:
+        raise VentaError('La tarifa debe ser mayor a 0.')
+
+    with transaction.atomic():
+        try:
+            viaje = Viaje.objects.select_for_update().get(pk=id_viaje)
+        except Viaje.DoesNotExist:
+            raise VentaError('El viaje ya no existe.')
+
+        if viaje.estado != 'programado':
+            raise VentaError('Solo se pueden modificar viajes programados.')
+        if viaje_tiene_reservas(viaje.pk):
+            raise VentaError('Este viaje ya tiene reservas: no se puede modificar.')
+        if (Viaje.objects
+                .filter(origen=origen, destino=destino, salida=salida)
+                .exclude(pk=viaje.pk).exists()):
+            raise VentaError('Ya existe un viaje con ese origen, destino y salida.')
+
+        viaje.origen = origen
+        viaje.destino = destino
+        viaje.salida = salida
+        viaje.tarifa = tarifa
+        viaje.save(update_fields=['origen', 'destino', 'salida', 'tarifa'])
+        return viaje
+
+
+def eliminar_viaje(id_viaje):
+    try:
+        with transaction.atomic():
+            try:
+                viaje = Viaje.objects.select_for_update().get(pk=id_viaje)
+            except Viaje.DoesNotExist:
+                raise VentaError('El viaje ya no existe.')
+
+            if viaje_tiene_reservas(viaje.pk):
+                raise VentaError('Este viaje tiene reservas registradas: no se puede eliminar.')
+
+            viaje.delete()   # sus 30 asientos se borran en cascada en la BD
+    except IntegrityError:
+        raise VentaError('Este viaje tiene registros asociados: no se puede eliminar.')
