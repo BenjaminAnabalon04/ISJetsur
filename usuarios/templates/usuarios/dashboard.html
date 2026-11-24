@@ -6,7 +6,7 @@
 {% block page_actions %}
 <div class="btn-row">
     <a href="{% url 'viajes:lista' %}" class="btn-ghost">Buscar viaje</a>
-    <button type="button" class="btn-solid">+ Nueva venta</button>
+    <a href="{% url 'viajes:lista' %}" class="btn-solid">+ Nueva venta</a>
 </div>
 {% endblock %}
 
