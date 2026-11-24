@@ -43,6 +43,7 @@
         <button type="submit" class="btn-solid">Confirmar pago y emitir ticket</button>
     </form>
 </div>
+<a href="{% url 'viajes:cambiar' reserva.id_reserva %}" class="btn-ghost">Cambiar asiento o viaje</a>
 <form method="post" action="{% url 'viajes:cancelar' reserva.id_reserva %}"
       onsubmit="return confirm('¿Cancelar la reserva y liberar el asiento?');">
     {% csrf_token %}

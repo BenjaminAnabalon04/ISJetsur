@@ -144,6 +144,9 @@
     </div>
 
     <div class="acciones">
+        {% if puede_cambiar %}
+        <a href="{% url 'viajes:cambiar' reserva.id_reserva %}">Cambiar asiento o viaje</a>
+        {% endif %}
         {% if not anulado %}
         <button type="button" onclick="window.print()">Imprimir</button>
         {% endif %}

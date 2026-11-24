@@ -355,3 +355,62 @@ def registrar_devolucion(codigo, id_usuario):
         reserva.activa = None            # libera el asiento
         reserva.save(update_fields=['estado', 'activa'])
         return devolucion
+
+def viajes_para_cambio(reserva):
+    """Viajes programados, futuros y de igual tarifa (incluye el actual)."""
+    return list(
+        Viaje.objects.filter(
+            estado='programado',
+            salida__gt=timezone.now(),
+            tarifa=reserva.id_viaje.tarifa,
+        ).order_by('salida')
+    )
+
+
+def cambiar_reserva(id_reserva, id_viaje_nuevo, numero_asiento):
+
+    expirar_reservas()
+
+    if numero_asiento < 1 or numero_asiento > TOTAL_ASIENTOS:
+        raise VentaError('El asiento debe estar entre 1 y 30.')
+
+    try:
+        with transaction.atomic():
+            reserva = (
+                Reserva.objects
+                .select_for_update()
+                .select_related('id_viaje')
+                .get(pk=id_reserva)
+            )
+            if reserva.estado not in ('pendiente', 'confirmada'):
+                raise VentaError('Solo se pueden cambiar reservas pendientes o confirmadas.')
+
+            actual = reserva.id_viaje
+            if actual.salida <= timezone.now():
+                raise VentaError('El viaje original ya salió: no se puede cambiar.')
+
+            try:
+                nuevo = Viaje.objects.select_for_update().get(pk=id_viaje_nuevo)
+            except Viaje.DoesNotExist:
+                raise VentaError('El viaje elegido no existe.')
+
+            if nuevo.estado != 'programado' or nuevo.salida <= timezone.now():
+                raise VentaError('El viaje elegido no está disponible para la venta.')
+            if nuevo.tarifa != actual.tarifa:
+                raise VentaError('Solo se puede cambiar a un viaje de igual valor.')
+            if nuevo.pk == actual.pk and numero_asiento == reserva.numero_asiento:
+                raise VentaError('Elige un asiento o un viaje distinto al actual.')
+
+            ocupado = Reserva.objects.filter(
+                id_viaje=nuevo, numero_asiento=numero_asiento, activa=1
+            ).exists()
+            if ocupado:
+                raise VentaError('Ese asiento ya está ocupado. Se conservó la reserva original.')
+
+            reserva.id_viaje = nuevo
+            reserva.numero_asiento = numero_asiento
+            reserva.save(update_fields=['id_viaje', 'numero_asiento'])
+            return reserva
+    except IntegrityError:
+  
+        raise VentaError('Ese asiento ya está ocupado. Se conservó la reserva original.')
