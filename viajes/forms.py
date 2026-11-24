@@ -20,3 +20,7 @@ class ViajeForm(forms.Form):
     destino = forms.CharField(min_length=3, max_length=80)
     salida = forms.DateTimeField(input_formats=['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M'])
     tarifa = forms.DecimalField(min_value=1, max_digits=10, decimal_places=0)
+
+class CambioForm(forms.Form):
+    id_viaje = forms.IntegerField(min_value=1)
+    numero_asiento = forms.IntegerField(min_value=1, max_value=30)

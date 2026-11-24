@@ -2,9 +2,9 @@ from functools import wraps
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
+from django.urls import reverse
 from . import services
-from .forms import CobroForm, ReservaForm, ViajeForm
+from .forms import CambioForm, CobroForm, ReservaForm, ViajeForm
 from .models import Devolucion, Reserva, Ticket, Venta, Viaje
 
 
@@ -153,6 +153,11 @@ def ticket(request, codigo):
         'reserva': boleto.id_reserva,
         'viaje': boleto.id_reserva.id_viaje,
         'venta': venta,
+        'anulado': boleto.id_reserva.estado == 'cancelada',
+        'puede_cambiar': (
+            boleto.id_reserva.estado == 'confirmada'
+            and boleto.id_reserva.id_viaje.salida > timezone.now()
+        ),
     })
 @sesion_requerida
 def cancelar(request, id_reserva):
@@ -263,3 +268,62 @@ def devolver(request, codigo):
         return redirect('viajes:devoluciones')
 
     return render(request, 'viajes/devolver.html', {'activo': 'devoluciones', **datos})
+
+@sesion_requerida
+def cambiar(request, id_reserva):
+    services.expirar_reservas()
+    services.marcar_viajes_salidos()
+    reserva = get_object_or_404(
+        Reserva.objects.select_related('id_viaje'), pk=id_reserva
+    )
+    boleto = Ticket.objects.filter(id_reserva=reserva).first()
+
+    if reserva.estado not in ('pendiente', 'confirmada'):
+        messages.error(request, 'Solo se pueden cambiar reservas pendientes o confirmadas.')
+        return redirect('viajes:lista')
+
+    url_cambiar = reverse('viajes:cambiar', args=[id_reserva])
+
+    if request.method == 'POST':
+        formulario = CambioForm(request.POST)
+        if not formulario.is_valid():
+            messages.error(request, 'Elige el viaje y el asiento nuevos.')
+            return redirect(url_cambiar)
+        try:
+            services.cambiar_reserva(
+                id_reserva=id_reserva,
+                id_viaje_nuevo=formulario.cleaned_data['id_viaje'],
+                numero_asiento=formulario.cleaned_data['numero_asiento'],
+            )
+        except services.VentaError as error:
+            messages.error(request, str(error))
+            return redirect(f"{url_cambiar}?viaje={formulario.cleaned_data['id_viaje']}")
+
+        messages.success(request, 'Reserva modificada. El asiento anterior quedó libre.')
+        if boleto:
+            return redirect('viajes:ticket', codigo=boleto.codigo)
+        return redirect('viajes:cobrar', id_reserva=id_reserva)
+
+    opciones = services.viajes_para_cambio(reserva)
+    viaje = None
+    if opciones:
+        try:
+            elegido = int(request.GET.get('viaje', reserva.id_viaje_id))
+        except ValueError:
+            elegido = reserva.id_viaje_id
+        viaje = next((v for v in opciones if v.id_viaje == elegido), opciones[0])
+
+    ocupados = services.asientos_ocupados(viaje) if viaje else set()
+    filas = [
+        list(range(inicio, min(inicio + 4, services.TOTAL_ASIENTOS + 1)))
+        for inicio in range(1, services.TOTAL_ASIENTOS + 1, 4)
+    ]
+    return render(request, 'viajes/cambiar.html', {
+        'activo': 'viajes',
+        'reserva': reserva,
+        'ticket': boleto,
+        'opciones': opciones,
+        'viaje': viaje,
+        'ocupados': ocupados,
+        'filas': filas,
+    })

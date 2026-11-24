@@ -1,0 +1,88 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Cambiar reserva #{{ reserva.id_reserva }}{% endblock %}
+{% block page_title %}Cambiar reserva #{{ reserva.id_reserva }}{% endblock %}
+{% block page_subtitle %}Elige otro asiento o viaje del mismo valor{% endblock %}
+{% block page_actions %}
+{% if ticket %}
+<a href="{% url 'viajes:ticket' codigo=ticket.codigo %}" class="btn-ghost">← Volver al ticket</a>
+{% else %}
+<a href="{% url 'viajes:cobrar' reserva.id_reserva %}" class="btn-ghost">← Volver</a>
+{% endif %}
+{% endblock %}
+
+{% block app_content %}
+
+<div class="card cobro-card">
+    <table class="table">
+        <tbody>
+            <tr><th>Pasajero</th><td>{{ reserva.nombre_pasajero }}</td></tr>
+            <tr>
+                <th>Reserva actual</th>
+                <td>{{ reserva.id_viaje.origen }} → {{ reserva.id_viaje.destino }}
+                    · {{ reserva.id_viaje.salida|date:"d/m/Y H:i" }}
+                    · asiento {{ reserva.numero_asiento }}</td>
+            </tr>
+            <tr><th>Valor</th><td class="strong">$ {{ reserva.id_viaje.tarifa|floatformat:0 }}</td></tr>
+            {% if ticket %}
+            <tr><th>Ticket</th><td class="mono">{{ ticket.codigo }} (se conserva)</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if not opciones %}
+<div class="alert alert-warning">
+    No hay viajes disponibles de igual valor para este cambio.
+</div>
+{% else %}
+
+<form method="get" class="search-bar">
+    <div class="search-field">
+        <label for="viaje">Viaje (solo de igual valor)</label>
+        <select id="viaje" name="viaje" class="form-control" onchange="this.form.submit()">
+            {% for v in opciones %}
+            <option value="{{ v.id_viaje }}" {% if v.id_viaje == viaje.id_viaje %}selected{% endif %}>
+                {{ v.salida|date:"d/m/Y H:i" }} · {{ v.origen }} → {{ v.destino }}{% if v.id_viaje == reserva.id_viaje_id %} (actual){% endif %}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</form>
+
+<form method="post" action="{% url 'viajes:cambiar' reserva.id_reserva %}">
+    {% csrf_token %}
+    <input type="hidden" name="id_viaje" value="{{ viaje.id_viaje }}">
+
+    <section class="card mapa-card">
+        <h2 class="mapa-titulo">{{ viaje.salida|date:"H:i" }} · {{ viaje.origen }} → {{ viaje.destino }}</h2>
+
+        <div class="bus">
+            <div class="bus-frente">Frente del bus</div>
+            {% for fila in filas %}
+            <div class="bus-fila">
+                {% for n in fila %}
+                    {% if forloop.counter == 3 %}<span class="pasillo"></span>{% endif %}
+                    <label class="asiento {% if n in ocupados %}asiento-ocupado{% else %}asiento-libre{% endif %}">
+                        <input type="radio" name="numero_asiento" value="{{ n }}"
+                               {% if n in ocupados %}disabled{% endif %} required>
+                        <span>{{ n }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="leyenda">
+            <span><i class="cuadro cuadro-libre"></i> Libre</span>
+            <span><i class="cuadro cuadro-ocupado"></i> Ocupado</span>
+            <span><i class="cuadro cuadro-seleccionado"></i> Seleccionado</span>
+        </div>
+        <p class="viaje-meta">Tu asiento actual ({{ reserva.numero_asiento }}) aparece como ocupado mientras no lo cambies.</p>
+
+        <button type="submit" class="btn-solid">Confirmar cambio</button>
+    </section>
+</form>
+
+{% endif %}
+{% endblock %}

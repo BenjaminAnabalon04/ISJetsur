@@ -44,6 +44,16 @@
         .chico { font-size: 8.5px; line-height: 1.35; text-align: justify; }
         .centro { text-align: center; }
 
+        .anulado {
+            margin: 0 0 2mm;
+            padding: 2mm;
+            border: 2px solid #000;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
         .acciones {
             width: 72mm;
             margin: 0 auto 24px;
@@ -77,7 +87,9 @@
 <body>
 
     <div class="ticket">
-
+        {% if anulado %}
+        <div class="anulado">TICKET ANULADO<br><span class="chico">Este boleto fue cancelado o devuelto y no es válido para viajar.</span></div>
+        {% endif %}
         <img src="{% static 'images/logocolor.png' %}" alt="JetSur" class="logo">
         <div class="centro chico">BOLETO DE VIAJE</div>
 
@@ -132,7 +144,12 @@
     </div>
 
     <div class="acciones">
+        {% if puede_cambiar %}
+        <a href="{% url 'viajes:cambiar' reserva.id_reserva %}">Cambiar asiento o viaje</a>
+        {% endif %}
+        {% if not anulado %}
         <button type="button" onclick="window.print()">Imprimir</button>
+        {% endif %}
         <a href="{% url 'viajes:lista' %}">Volver a viajes</a>
     </div>
 
